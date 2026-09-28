@@ -1,0 +1,4 @@
+anthropic>=1.0
+pydantic>=2
+pytest>=8
+psycopg[binary]>=3.1

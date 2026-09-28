@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Runtime logs written by the app (chat transcripts, tool traces, mock orders)
+*.jsonl
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Design doc export (kept locally; the living doc is maintained separately)
+foodagent/*.pdf

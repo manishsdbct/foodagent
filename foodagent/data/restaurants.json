@@ -1,0 +1,1695 @@
+{
+  "user_profile": {
+    "id": "u_123",
+    "default_address": "home",
+    "cuisine_affinity": {
+      "north_indian": 0.6,
+      "south_indian": 0.3,
+      "biryani": 0.5,
+      "indo_chinese": 0.3,
+      "mughlai": 0.5,
+      "street_food": 0.4
+    },
+    "spice_pref": 2,
+    "name": "Demo User",
+    "city": "bengaluru",
+    "addresses": [
+      {
+        "id": "home",
+        "label": "Home",
+        "area": "Indiranagar, Bengaluru"
+      },
+      {
+        "id": "work",
+        "label": "Work",
+        "area": "Koramangala, Bengaluru"
+      }
+    ],
+    "saved_allergies": [],
+    "payment_methods": [
+      "saved UPI",
+      "card ending 4242"
+    ],
+    "recent_orders": [
+      {
+        "restaurant": "Spice Route Kitchen",
+        "items": [
+          "Kadai Paneer",
+          "Jeera Rice"
+        ],
+        "date": "2026-09-18"
+      },
+      {
+        "restaurant": "Dum Pukht Express",
+        "items": [
+          "Chicken Dum Biryani"
+        ],
+        "date": "2026-09-10"
+      }
+    ]
+  },
+  "restaurants": [
+    {
+      "id": "r_spice_route",
+      "name": "Spice Route Kitchen",
+      "cuisines": [
+        "north_indian"
+      ],
+      "rating": 4.3,
+      "pure_veg": false,
+      "prep_time_min": 25,
+      "distance_km": 4.0,
+      "delivery_fee": 40,
+      "packaging_fee": 30,
+      "kitchen_flags": [],
+      "open": "11:00",
+      "close": "23:30",
+      "items": [
+        {
+          "id": "sr_pbm",
+          "name": "Paneer Butter Masala",
+          "course": "main",
+          "price": 310,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy",
+            "tree_nut"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "paneer",
+            "tomato",
+            "cashew",
+            "butter",
+            "cream"
+          ],
+          "primary": [
+            "paneer"
+          ],
+          "spice": 1,
+          "tastes": {
+            "rich": 4,
+            "sweet": 2
+          },
+          "famous_in": [
+            "delhi"
+          ],
+          "tags": [
+            "curry",
+            "shareable"
+          ],
+          "rating": 4.5,
+          "orders_30d": 1400
+        },
+        {
+          "id": "sr_bc",
+          "name": "Butter Chicken",
+          "course": "main",
+          "price": 340,
+          "serves": 2,
+          "diet": "non_veg",
+          "contains": [
+            "dairy",
+            "tree_nut"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "chicken",
+            "tomato",
+            "cashew",
+            "butter",
+            "cream"
+          ],
+          "primary": [
+            "chicken"
+          ],
+          "spice": 1,
+          "tastes": {
+            "rich": 4,
+            "sweet": 2
+          },
+          "famous_in": [
+            "delhi"
+          ],
+          "tags": [
+            "curry",
+            "shareable"
+          ],
+          "rating": 4.6,
+          "orders_30d": 1650
+        },
+        {
+          "id": "sr_kp",
+          "name": "Kadai Paneer",
+          "course": "main",
+          "price": 290,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "paneer",
+            "capsicum",
+            "onion",
+            "tomato"
+          ],
+          "primary": [
+            "paneer"
+          ],
+          "spice": 3,
+          "tastes": {
+            "tangy": 2,
+            "smoky": 2
+          },
+          "famous_in": [
+            "delhi",
+            "punjab"
+          ],
+          "tags": [
+            "curry",
+            "shareable"
+          ],
+          "rating": 4.4,
+          "orders_30d": 812
+        },
+        {
+          "id": "sr_dm",
+          "name": "Dal Makhani",
+          "course": "main",
+          "price": 260,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "black lentil",
+            "butter",
+            "cream"
+          ],
+          "primary": [
+            "black lentil"
+          ],
+          "spice": 1,
+          "tastes": {
+            "rich": 4
+          },
+          "famous_in": [
+            "delhi",
+            "punjab"
+          ],
+          "tags": [
+            "dal",
+            "shareable"
+          ],
+          "rating": 4.5,
+          "orders_30d": 1200
+        },
+        {
+          "id": "sr_cc",
+          "name": "Home-style Chicken Curry",
+          "course": "main",
+          "price": 320,
+          "serves": 2,
+          "diet": "non_veg",
+          "contains": [],
+          "may_contain": [],
+          "ingredients": [
+            "chicken",
+            "onion",
+            "tomato"
+          ],
+          "primary": [
+            "chicken"
+          ],
+          "spice": 3,
+          "tastes": {
+            "savoury": 3
+          },
+          "famous_in": [],
+          "tags": [
+            "curry",
+            "shareable"
+          ],
+          "rating": 4.2,
+          "orders_30d": 640
+        },
+        {
+          "id": "sr_chana",
+          "name": "Chana Masala",
+          "course": "main",
+          "price": 220,
+          "serves": 2,
+          "diet": "vegan",
+          "contains": [],
+          "may_contain": [],
+          "ingredients": [
+            "chickpea",
+            "onion",
+            "tomato"
+          ],
+          "primary": [
+            "chickpea"
+          ],
+          "spice": 3,
+          "tastes": {
+            "tangy": 3
+          },
+          "famous_in": [
+            "delhi",
+            "punjab"
+          ],
+          "tags": [
+            "curry",
+            "shareable"
+          ],
+          "rating": 4.1,
+          "orders_30d": 420
+        },
+        {
+          "id": "sr_jr",
+          "name": "Jeera Rice",
+          "course": "rice",
+          "price": 180,
+          "serves": 2,
+          "diet": "vegan",
+          "contains": [],
+          "may_contain": [],
+          "ingredients": [
+            "rice",
+            "cumin"
+          ],
+          "primary": [
+            "rice"
+          ],
+          "spice": 0,
+          "tastes": {},
+          "famous_in": [],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.2,
+          "orders_30d": 900
+        },
+        {
+          "id": "sr_naan",
+          "name": "Butter Naan",
+          "course": "bread",
+          "price": 50,
+          "serves": 1,
+          "diet": "veg",
+          "contains": [
+            "dairy",
+            "gluten"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "flour",
+            "butter"
+          ],
+          "primary": [
+            "flour"
+          ],
+          "spice": 0,
+          "tastes": {},
+          "famous_in": [],
+          "tags": [],
+          "rating": 4.3,
+          "orders_30d": 2100
+        },
+        {
+          "id": "sr_roti",
+          "name": "Tandoori Roti",
+          "course": "bread",
+          "price": 30,
+          "serves": 1,
+          "diet": "vegan",
+          "contains": [
+            "gluten"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "wheat flour"
+          ],
+          "primary": [
+            "wheat flour"
+          ],
+          "spice": 0,
+          "tastes": {},
+          "famous_in": [],
+          "tags": [],
+          "rating": 4.0,
+          "orders_30d": 1500
+        },
+        {
+          "id": "sr_raita",
+          "name": "Boondi Raita",
+          "course": "side",
+          "price": 90,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy",
+            "gluten"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "curd",
+            "boondi"
+          ],
+          "primary": [
+            "curd"
+          ],
+          "spice": 0,
+          "tastes": {
+            "tangy": 1
+          },
+          "famous_in": [],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.0,
+          "orders_30d": 500
+        },
+        {
+          "id": "sr_gj",
+          "name": "Gulab Jamun (4 pcs)",
+          "course": "dessert",
+          "price": 120,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy",
+            "gluten"
+          ],
+          "may_contain": [
+            "tree_nut"
+          ],
+          "ingredients": [
+            "khoya",
+            "sugar",
+            "pistachio"
+          ],
+          "primary": [
+            "khoya"
+          ],
+          "spice": 0,
+          "tastes": {
+            "sweet": 4
+          },
+          "famous_in": [
+            "delhi"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.4,
+          "orders_30d": 700
+        }
+      ]
+    },
+    {
+      "id": "r_udupi",
+      "name": "Udupi Garden",
+      "cuisines": [
+        "south_indian"
+      ],
+      "rating": 4.4,
+      "pure_veg": true,
+      "prep_time_min": 20,
+      "distance_km": 3.0,
+      "delivery_fee": 30,
+      "packaging_fee": 25,
+      "kitchen_flags": [
+        "nut_free_kitchen"
+      ],
+      "open": "07:00",
+      "close": "22:30",
+      "items": [
+        {
+          "id": "ud_thali",
+          "name": "South Indian Thali",
+          "course": "meal",
+          "price": 220,
+          "serves": 1,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "rice",
+            "sambar",
+            "rasam",
+            "curd",
+            "poriyal"
+          ],
+          "primary": [
+            "rice"
+          ],
+          "spice": 2,
+          "tastes": {
+            "tangy": 2
+          },
+          "famous_in": [
+            "karnataka"
+          ],
+          "tags": [
+            "complete_meal"
+          ],
+          "rating": 4.5,
+          "orders_30d": 980
+        },
+        {
+          "id": "ud_dosa",
+          "name": "Masala Dosa",
+          "course": "meal",
+          "price": 110,
+          "serves": 1,
+          "diet": "vegan",
+          "contains": [],
+          "may_contain": [],
+          "ingredients": [
+            "rice batter",
+            "potato",
+            "onion"
+          ],
+          "primary": [
+            "potato"
+          ],
+          "spice": 2,
+          "tastes": {
+            "savoury": 3
+          },
+          "famous_in": [
+            "karnataka"
+          ],
+          "tags": [],
+          "rating": 4.6,
+          "orders_30d": 2200
+        },
+        {
+          "id": "ud_bbb",
+          "name": "Bisi Bele Bath",
+          "course": "meal",
+          "price": 160,
+          "serves": 1,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "rice",
+            "toor dal",
+            "vegetables",
+            "ghee"
+          ],
+          "primary": [
+            "rice"
+          ],
+          "spice": 3,
+          "tastes": {
+            "tangy": 2
+          },
+          "famous_in": [
+            "karnataka"
+          ],
+          "tags": [],
+          "rating": 4.3,
+          "orders_30d": 610
+        },
+        {
+          "id": "ud_curd",
+          "name": "Curd Rice",
+          "course": "meal",
+          "price": 120,
+          "serves": 1,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "rice",
+            "curd"
+          ],
+          "primary": [
+            "rice",
+            "curd"
+          ],
+          "spice": 0,
+          "tastes": {
+            "sour": 1
+          },
+          "famous_in": [],
+          "tags": [],
+          "rating": 4.2,
+          "orders_30d": 450
+        },
+        {
+          "id": "ud_vada",
+          "name": "Medu Vada (2 pcs)",
+          "course": "starter",
+          "price": 120,
+          "serves": 2,
+          "diet": "vegan",
+          "contains": [],
+          "may_contain": [],
+          "ingredients": [
+            "urad dal"
+          ],
+          "primary": [
+            "urad dal"
+          ],
+          "spice": 1,
+          "tastes": {
+            "savoury": 3
+          },
+          "famous_in": [
+            "karnataka"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.4,
+          "orders_30d": 1300
+        },
+        {
+          "id": "ud_rasam",
+          "name": "Pepper Rasam",
+          "course": "side",
+          "price": 80,
+          "serves": 2,
+          "diet": "vegan",
+          "contains": [],
+          "may_contain": [],
+          "ingredients": [
+            "tamarind",
+            "pepper",
+            "tomato"
+          ],
+          "primary": [
+            "tamarind"
+          ],
+          "spice": 3,
+          "tastes": {
+            "sour": 3,
+            "tangy": 3
+          },
+          "famous_in": [],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.1,
+          "orders_30d": 300
+        },
+        {
+          "id": "ud_mp",
+          "name": "Mysore Pak",
+          "course": "dessert",
+          "price": 100,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "gram flour",
+            "ghee",
+            "sugar"
+          ],
+          "primary": [
+            "gram flour"
+          ],
+          "spice": 0,
+          "tastes": {
+            "sweet": 4,
+            "rich": 3
+          },
+          "famous_in": [
+            "karnataka"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.5,
+          "orders_30d": 540
+        }
+      ]
+    },
+    {
+      "id": "r_dum_pukht",
+      "name": "Dum Pukht Express",
+      "cuisines": [
+        "biryani"
+      ],
+      "rating": 4.2,
+      "pure_veg": false,
+      "prep_time_min": 30,
+      "distance_km": 5.0,
+      "delivery_fee": 40,
+      "packaging_fee": 40,
+      "kitchen_flags": [],
+      "open": "12:00",
+      "close": "23:59",
+      "items": [
+        {
+          "id": "dp_cb",
+          "name": "Chicken Dum Biryani",
+          "course": "meal",
+          "price": 330,
+          "serves": 2,
+          "diet": "non_veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "basmati rice",
+            "chicken",
+            "curd",
+            "fried onion",
+            "rice"
+          ],
+          "primary": [
+            "chicken",
+            "rice"
+          ],
+          "spice": 3,
+          "tastes": {
+            "smoky": 2
+          },
+          "famous_in": [
+            "hyderabad"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.4,
+          "orders_30d": 2500
+        },
+        {
+          "id": "dp_mb",
+          "name": "Mutton Biryani",
+          "course": "meal",
+          "price": 420,
+          "serves": 2,
+          "diet": "non_veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "basmati rice",
+            "mutton",
+            "curd",
+            "rice"
+          ],
+          "primary": [
+            "mutton",
+            "rice"
+          ],
+          "spice": 3,
+          "tastes": {
+            "rich": 3
+          },
+          "famous_in": [
+            "hyderabad"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.5,
+          "orders_30d": 1100
+        },
+        {
+          "id": "dp_vb",
+          "name": "Veg Dum Biryani",
+          "course": "meal",
+          "price": 280,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "basmati rice",
+            "vegetables",
+            "curd",
+            "rice"
+          ],
+          "primary": [
+            "rice",
+            "vegetables"
+          ],
+          "spice": 2,
+          "tastes": {
+            "smoky": 1
+          },
+          "famous_in": [
+            "hyderabad"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.0,
+          "orders_30d": 600
+        },
+        {
+          "id": "dp_eb",
+          "name": "Egg Biryani",
+          "course": "meal",
+          "price": 260,
+          "serves": 2,
+          "diet": "egg",
+          "contains": [
+            "egg",
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "basmati rice",
+            "egg",
+            "rice"
+          ],
+          "primary": [
+            "egg",
+            "rice"
+          ],
+          "spice": 3,
+          "tastes": {},
+          "famous_in": [
+            "hyderabad"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.1,
+          "orders_30d": 520
+        },
+        {
+          "id": "dp_p65",
+          "name": "Paneer 65",
+          "course": "starter",
+          "price": 240,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "paneer",
+            "curry leaves",
+            "chilli"
+          ],
+          "primary": [
+            "paneer"
+          ],
+          "spice": 4,
+          "tastes": {
+            "savoury": 3
+          },
+          "famous_in": [
+            "hyderabad"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.3,
+          "orders_30d": 700
+        },
+        {
+          "id": "dp_c65",
+          "name": "Chicken 65",
+          "course": "starter",
+          "price": 260,
+          "serves": 2,
+          "diet": "non_veg",
+          "contains": [],
+          "may_contain": [],
+          "ingredients": [
+            "chicken",
+            "curry leaves",
+            "chilli"
+          ],
+          "primary": [
+            "chicken"
+          ],
+          "spice": 4,
+          "tastes": {
+            "savoury": 3
+          },
+          "famous_in": [
+            "hyderabad"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.4,
+          "orders_30d": 1400
+        },
+        {
+          "id": "dp_salan",
+          "name": "Mirchi ka Salan",
+          "course": "side",
+          "price": 120,
+          "serves": 2,
+          "diet": "vegan",
+          "contains": [
+            "peanut",
+            "sesame"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "green chilli",
+            "peanut",
+            "sesame",
+            "tamarind"
+          ],
+          "primary": [
+            "green chilli"
+          ],
+          "spice": 3,
+          "tastes": {
+            "tangy": 3
+          },
+          "famous_in": [
+            "hyderabad"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.2,
+          "orders_30d": 800
+        },
+        {
+          "id": "dp_raita",
+          "name": "Onion Raita",
+          "course": "side",
+          "price": 60,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "curd",
+            "onion"
+          ],
+          "primary": [
+            "curd"
+          ],
+          "spice": 0,
+          "tastes": {},
+          "famous_in": [],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.0,
+          "orders_30d": 1200
+        },
+        {
+          "id": "dp_dkm",
+          "name": "Double ka Meetha",
+          "course": "dessert",
+          "price": 140,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy",
+            "gluten",
+            "tree_nut"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "bread",
+            "milk",
+            "almond",
+            "cashew"
+          ],
+          "primary": [
+            "bread"
+          ],
+          "spice": 0,
+          "tastes": {
+            "sweet": 4,
+            "rich": 3
+          },
+          "famous_in": [
+            "hyderabad"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.3,
+          "orders_30d": 400
+        }
+      ]
+    },
+    {
+      "id": "r_tandoor",
+      "name": "Tandoor Nights",
+      "cuisines": [
+        "mughlai",
+        "north_indian"
+      ],
+      "rating": 4.5,
+      "pure_veg": false,
+      "prep_time_min": 35,
+      "distance_km": 6.0,
+      "delivery_fee": 50,
+      "packaging_fee": 40,
+      "kitchen_flags": [],
+      "open": "12:00",
+      "close": "23:30",
+      "items": [
+        {
+          "id": "tn_pt",
+          "name": "Paneer Tikka",
+          "course": "starter",
+          "price": 280,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "paneer",
+            "curd",
+            "capsicum",
+            "onion"
+          ],
+          "primary": [
+            "paneer"
+          ],
+          "spice": 3,
+          "tastes": {
+            "smoky": 4
+          },
+          "famous_in": [
+            "delhi",
+            "punjab"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.6,
+          "orders_30d": 1500
+        },
+        {
+          "id": "tn_sp",
+          "name": "Shahi Paneer",
+          "course": "main",
+          "price": 330,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy",
+            "tree_nut"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "paneer",
+            "cashew",
+            "cream"
+          ],
+          "primary": [
+            "paneer"
+          ],
+          "spice": 1,
+          "tastes": {
+            "rich": 4,
+            "sweet": 2
+          },
+          "famous_in": [
+            "delhi"
+          ],
+          "tags": [
+            "curry",
+            "shareable"
+          ],
+          "rating": 4.4,
+          "orders_30d": 900
+        },
+        {
+          "id": "tn_mm",
+          "name": "Murgh Makhani",
+          "course": "main",
+          "price": 360,
+          "serves": 2,
+          "diet": "non_veg",
+          "contains": [
+            "dairy",
+            "tree_nut"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "chicken",
+            "cashew",
+            "butter"
+          ],
+          "primary": [
+            "chicken"
+          ],
+          "spice": 1,
+          "tastes": {
+            "rich": 4
+          },
+          "famous_in": [
+            "delhi"
+          ],
+          "tags": [
+            "curry",
+            "shareable"
+          ],
+          "rating": 4.7,
+          "orders_30d": 1800
+        },
+        {
+          "id": "tn_ct",
+          "name": "Chicken Tikka",
+          "course": "starter",
+          "price": 320,
+          "serves": 2,
+          "diet": "non_veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "chicken",
+            "curd"
+          ],
+          "primary": [
+            "chicken"
+          ],
+          "spice": 3,
+          "tastes": {
+            "smoky": 4
+          },
+          "famous_in": [
+            "delhi",
+            "punjab"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.5,
+          "orders_30d": 1300
+        },
+        {
+          "id": "tn_nihari",
+          "name": "Nihari",
+          "course": "main",
+          "price": 420,
+          "serves": 2,
+          "diet": "non_veg",
+          "contains": [
+            "gluten"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "mutton",
+            "wheat flour",
+            "spices"
+          ],
+          "primary": [
+            "mutton"
+          ],
+          "spice": 3,
+          "tastes": {
+            "rich": 4
+          },
+          "famous_in": [
+            "delhi"
+          ],
+          "tags": [
+            "curry",
+            "shareable"
+          ],
+          "rating": 4.6,
+          "orders_30d": 600
+        },
+        {
+          "id": "tn_dt",
+          "name": "Dal Tadka",
+          "course": "main",
+          "price": 220,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "toor dal",
+            "ghee",
+            "garlic"
+          ],
+          "primary": [
+            "toor dal"
+          ],
+          "spice": 2,
+          "tastes": {
+            "savoury": 3
+          },
+          "famous_in": [],
+          "tags": [
+            "dal",
+            "shareable"
+          ],
+          "rating": 4.2,
+          "orders_30d": 700
+        },
+        {
+          "id": "tn_lp",
+          "name": "Laccha Paratha",
+          "course": "bread",
+          "price": 60,
+          "serves": 1,
+          "diet": "veg",
+          "contains": [
+            "dairy",
+            "gluten"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "flour",
+            "ghee"
+          ],
+          "primary": [
+            "flour"
+          ],
+          "spice": 0,
+          "tastes": {},
+          "famous_in": [],
+          "tags": [],
+          "rating": 4.3,
+          "orders_30d": 1100
+        },
+        {
+          "id": "tn_pulao",
+          "name": "Veg Pulao",
+          "course": "rice",
+          "price": 200,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [
+            "tree_nut"
+          ],
+          "ingredients": [
+            "basmati rice",
+            "vegetables",
+            "ghee",
+            "rice"
+          ],
+          "primary": [
+            "rice"
+          ],
+          "spice": 1,
+          "tastes": {},
+          "famous_in": [],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.0,
+          "orders_30d": 400
+        }
+      ]
+    },
+    {
+      "id": "r_wok",
+      "name": "Wok Street",
+      "cuisines": [
+        "indo_chinese"
+      ],
+      "rating": 4.0,
+      "pure_veg": false,
+      "prep_time_min": 20,
+      "distance_km": 2.0,
+      "delivery_fee": 30,
+      "packaging_fee": 30,
+      "kitchen_flags": [
+        "shared_fryer_nuts"
+      ],
+      "open": "12:00",
+      "close": "23:00",
+      "items": [
+        {
+          "id": "wk_cp",
+          "name": "Chilli Paneer (gravy)",
+          "course": "main",
+          "price": 260,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy",
+            "soy",
+            "gluten"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "paneer",
+            "capsicum",
+            "soy sauce",
+            "chilli"
+          ],
+          "primary": [
+            "paneer"
+          ],
+          "spice": 4,
+          "tastes": {
+            "tangy": 2,
+            "savoury": 3
+          },
+          "famous_in": [
+            "kolkata"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.3,
+          "orders_30d": 1600
+        },
+        {
+          "id": "wk_cm",
+          "name": "Chicken Manchurian",
+          "course": "main",
+          "price": 280,
+          "serves": 2,
+          "diet": "non_veg",
+          "contains": [
+            "soy",
+            "gluten",
+            "egg"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "chicken",
+            "soy sauce",
+            "egg",
+            "cornflour"
+          ],
+          "primary": [
+            "chicken"
+          ],
+          "spice": 3,
+          "tastes": {
+            "savoury": 3
+          },
+          "famous_in": [],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.1,
+          "orders_30d": 900
+        },
+        {
+          "id": "wk_kp",
+          "name": "Kung Pao Chicken",
+          "course": "main",
+          "price": 300,
+          "serves": 2,
+          "diet": "non_veg",
+          "contains": [
+            "peanut",
+            "soy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "chicken",
+            "peanut",
+            "dry chilli"
+          ],
+          "primary": [
+            "chicken"
+          ],
+          "spice": 3,
+          "tastes": {
+            "savoury": 3,
+            "sweet": 1
+          },
+          "famous_in": [],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.2,
+          "orders_30d": 500
+        },
+        {
+          "id": "wk_hn",
+          "name": "Veg Hakka Noodles",
+          "course": "noodles",
+          "price": 220,
+          "serves": 2,
+          "diet": "vegan",
+          "contains": [
+            "soy",
+            "gluten"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "noodles",
+            "cabbage",
+            "soy sauce"
+          ],
+          "primary": [
+            "noodles"
+          ],
+          "spice": 1,
+          "tastes": {
+            "savoury": 2
+          },
+          "famous_in": [],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.0,
+          "orders_30d": 1400
+        },
+        {
+          "id": "wk_fr",
+          "name": "Veg Fried Rice",
+          "course": "rice",
+          "price": 200,
+          "serves": 2,
+          "diet": "vegan",
+          "contains": [
+            "soy",
+            "gluten"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "rice",
+            "vegetables",
+            "soy sauce"
+          ],
+          "primary": [
+            "rice"
+          ],
+          "spice": 1,
+          "tastes": {
+            "savoury": 2
+          },
+          "famous_in": [],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.0,
+          "orders_30d": 1300
+        },
+        {
+          "id": "wk_hcp",
+          "name": "Honey Chilli Potato",
+          "course": "starter",
+          "price": 200,
+          "serves": 2,
+          "diet": "vegan",
+          "contains": [
+            "sesame"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "potato",
+            "honey",
+            "sesame",
+            "chilli"
+          ],
+          "primary": [
+            "potato"
+          ],
+          "spice": 2,
+          "tastes": {
+            "sweet": 3
+          },
+          "famous_in": [
+            "delhi"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.2,
+          "orders_30d": 1100
+        }
+      ]
+    },
+    {
+      "id": "r_chaat",
+      "name": "Delhi Chaat Corner",
+      "cuisines": [
+        "street_food",
+        "north_indian"
+      ],
+      "rating": 4.1,
+      "pure_veg": true,
+      "prep_time_min": 15,
+      "distance_km": 3.0,
+      "delivery_fee": 25,
+      "packaging_fee": 20,
+      "kitchen_flags": [],
+      "open": "10:00",
+      "close": "22:00",
+      "items": [
+        {
+          "id": "dc_cb",
+          "name": "Chole Bhature",
+          "course": "meal",
+          "price": 180,
+          "serves": 1,
+          "diet": "veg",
+          "contains": [
+            "gluten",
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "chickpea",
+            "flour",
+            "onion"
+          ],
+          "primary": [
+            "chickpea"
+          ],
+          "spice": 3,
+          "tastes": {
+            "tangy": 2
+          },
+          "famous_in": [
+            "delhi",
+            "punjab"
+          ],
+          "tags": [],
+          "rating": 4.4,
+          "orders_30d": 1700
+        },
+        {
+          "id": "dc_tikki",
+          "name": "Aloo Tikki Chaat",
+          "course": "starter",
+          "price": 120,
+          "serves": 1,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "potato",
+            "curd",
+            "tamarind chutney"
+          ],
+          "primary": [
+            "potato"
+          ],
+          "spice": 2,
+          "tastes": {
+            "tangy": 3,
+            "sweet": 2
+          },
+          "famous_in": [
+            "delhi"
+          ],
+          "tags": [],
+          "rating": 4.3,
+          "orders_30d": 1200
+        },
+        {
+          "id": "dc_paratha",
+          "name": "Aloo Paratha (with curd)",
+          "course": "meal",
+          "price": 120,
+          "serves": 1,
+          "diet": "veg",
+          "contains": [
+            "gluten",
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "wheat flour",
+            "potato",
+            "butter"
+          ],
+          "primary": [
+            "potato"
+          ],
+          "spice": 2,
+          "tastes": {
+            "savoury": 3
+          },
+          "famous_in": [
+            "delhi",
+            "punjab"
+          ],
+          "tags": [],
+          "rating": 4.2,
+          "orders_30d": 900
+        },
+        {
+          "id": "dc_pakora",
+          "name": "Paneer Pakora",
+          "course": "starter",
+          "price": 160,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "paneer",
+            "gram flour"
+          ],
+          "primary": [
+            "paneer"
+          ],
+          "spice": 2,
+          "tastes": {
+            "savoury": 3
+          },
+          "famous_in": [
+            "delhi"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.0,
+          "orders_30d": 500,
+          "allergen_verified": false
+        },
+        {
+          "id": "dc_rj",
+          "name": "Rabri Jalebi",
+          "course": "dessert",
+          "price": 150,
+          "serves": 2,
+          "diet": "veg",
+          "contains": [
+            "dairy",
+            "gluten"
+          ],
+          "may_contain": [
+            "tree_nut"
+          ],
+          "ingredients": [
+            "jalebi",
+            "rabri",
+            "pistachio"
+          ],
+          "primary": [
+            "rabri"
+          ],
+          "spice": 0,
+          "tastes": {
+            "sweet": 4
+          },
+          "famous_in": [
+            "delhi"
+          ],
+          "tags": [
+            "shareable"
+          ],
+          "rating": 4.5,
+          "orders_30d": 800
+        },
+        {
+          "id": "dc_lassi",
+          "name": "Sweet Lassi",
+          "course": "beverage",
+          "price": 80,
+          "serves": 1,
+          "diet": "veg",
+          "contains": [
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "curd",
+            "sugar"
+          ],
+          "primary": [
+            "curd"
+          ],
+          "spice": 0,
+          "tastes": {
+            "sweet": 3
+          },
+          "famous_in": [
+            "punjab",
+            "delhi"
+          ],
+          "tags": [],
+          "rating": 4.2,
+          "orders_30d": 600
+        },
+        {
+          "id": "dc_cake",
+          "name": "Tutti Frutti Cake (slice)",
+          "course": "dessert",
+          "price": 90,
+          "serves": 1,
+          "diet": "egg",
+          "contains": [
+            "egg",
+            "gluten",
+            "dairy"
+          ],
+          "may_contain": [],
+          "ingredients": [
+            "flour",
+            "egg",
+            "butter",
+            "sugar",
+            "tutti frutti"
+          ],
+          "primary": [
+            "flour"
+          ],
+          "spice": 0,
+          "tastes": {
+            "sweet": 4
+          },
+          "famous_in": [],
+          "tags": [
+            "bakery"
+          ],
+          "rating": 4.0,
+          "orders_30d": 210
+        }
+      ]
+    }
+  ]
+}
