@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Callable
 from zoneinfo import ZoneInfo
 
-from . import db
+from . import db, guardrails
 from .orders import OrderService
 
 TTL_S = 2 * 60 * 60
@@ -59,19 +59,23 @@ class SessionStore:
 
 
 def run_turn(agent, session_id: str, message: str) -> tuple[str, dict]:
-    """One chat turn plus its log row: latency, the tool calls it made, and any error. An exception
-    becomes a plain apology and the session is kept (design doc: tell the customer, keep the state)."""
-    trace = getattr(getattr(agent, "session", None), "trace", [])  # tool calls (Claude orchestrator only)
+    """One chat turn plus its log row: latency, the tool calls it made, any guardrail that fired, and
+    any error. The input guardrail can answer without calling the agent; the output guardrail checks
+    every reply. An exception becomes a plain apology and the session is kept (design doc: tell the
+    customer, keep the state)."""
+    trace = getattr(getattr(agent, "session", None), "trace", [])  # tool calls (model orchestrator only)
     seen, start, error = len(trace), time.perf_counter(), None
+    check = guardrails.check_input(message)
     try:
-        reply = agent.handle(message)
+        reply = check.reply if check.reply is not None else agent.handle(check.text)
     except Exception as exc:
         error = f"{type(exc).__name__}: {exc}"
         reply = (f"Sorry, something went wrong on our side ({type(exc).__name__}). "
                  "Your order details are kept — please try again.")
+    reply, out_flags = guardrails.check_output(reply, agent)
     row = {"ts": datetime.now().astimezone().isoformat(timespec="seconds"), "request_id": secrets.token_hex(4),
-           "session_id": session_id, "agent": type(agent).__name__, "message": message, "reply": reply,
-           "state": agent.state, "tools": trace[seen:], "error": error,
+           "session_id": session_id, "agent": type(agent).__name__, "message": check.logged, "reply": reply,
+           "state": agent.state, "tools": trace[seen:], "error": error, "guardrails": check.flags + out_flags,
            "ms": round((time.perf_counter() - start) * 1000, 1)}
     return reply, row
 
@@ -88,7 +92,8 @@ class TurnLog:
         if self.echo:
             tools = ",".join(t["tool"] for t in row["tools"]) or "-"
             print(f"{row['ts']} {row['request_id']} sid={row['session_id']} {row['state']:<12} {row['ms']:>7.1f}ms "
-                  f"tools={tools}{'  ERROR ' + row['error'] if row['error'] else ''}", flush=True)
+                  f"tools={tools}{'  GUARD ' + ','.join(row['guardrails']) if row.get('guardrails') else ''}"
+                  f"{'  ERROR ' + row['error'] if row['error'] else ''}", flush=True)
         if self.path:
             with self._lock, open(self.path, "a") as f:
                 f.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
