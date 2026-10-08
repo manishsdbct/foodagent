@@ -1,0 +1,429 @@
+{
+  "run_at": "2026-10-08T16:03:12+05:30",
+  "commit": "487e4d2",
+  "model": "claude-opus-5",
+  "requests": 20,
+  "errors": 0,
+  "asked_instead_of_recommending": 0,
+  "allergens_dropped": 0,
+  "requests_with_bundles": 20,
+  "violations": 0,
+  "median_cards_ms": 2960,
+  "p95_cards_ms": 3852,
+  "median_reply_ms": 5934,
+  "p95_reply_ms": 6913,
+  "latency_target_met": true,
+  "gate_pass": true,
+  "rows": [
+    {
+      "text": "We are 4 people, need dinner. All veg. No egg please, egg allergy. Under 3k.",
+      "labelled_allergens": [
+        "egg"
+      ],
+      "used_allergens": [
+        "egg"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 3340.0,
+      "reply_ms": 6331.0,
+      "reply": "Three all-veg, egg-free options: A Amritsari Dhaba, B The Curry Leaf Bistro, C Lucknowi Zaika — all well under ₹3,000, mild spice as per your profile. Egg dishes were excluded; allergen data comes from the restaurant and the egg allergy is in the order note.\n\nWhich one would you like, or want any swaps?"
+    },
+    {
+      "text": "party of 10, dinner please Someone is allergic to peanuts. Keep the total under ₹2,000.",
+      "labelled_allergens": [
+        "peanut"
+      ],
+      "used_allergens": [
+        "peanut"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 3327.1,
+      "reply_ms": 6074.1,
+      "reply": "I took \"peanuts\" as peanut only (say the word if tree nuts should be excluded too) and kept spice mild per your profile — here are A (Amritsari Dhaba), B (Lucknowi Zaika) and C (Paratha Wali Gali), all peanut-free and under ₹2,000.\n\nAllergen data comes from the restaurant, and the allergy is in the order note. Which one would you like, or shall I tweak something?"
+    },
+    {
+      "text": "Lunch for 9 guests. One of us can't eat cashew. Budget 1500.",
+      "labelled_allergens": [
+        "tree_nut"
+      ],
+      "used_allergens": [
+        "tree_nut"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 3301.1,
+      "reply_ms": 6912.6,
+      "reply": "I treated the cashew allergy as tree nut across the whole order (cashew gravies like paneer butter masala were left out); tell me if you want it narrowed to cashew only. Three options above: A Amritsari Dhaba (dal + breads), B Mumbai Chowpatty (street-food spread), C Kathi Junction (rolls + parathas). Allergen data comes from the restaurant and the allergy is in the order note — which one, or want an edit?"
+    },
+    {
+      "text": "Lunch for 6 guests. One has a nut allergy. Under ₹800. Deliver it by 8 pm.",
+      "labelled_allergens": [
+        "peanut",
+        "tree_nut"
+      ],
+      "used_allergens": [
+        "peanut",
+        "tree_nut"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 2960.4,
+      "reply_ms": 5933.6,
+      "reply": "I read \"nut allergy\" as both peanut and tree nut for the whole order — happy to narrow it if it's only one. Allergen data comes from the restaurant and the allergy is in the order note.\n\nA Chennai Mess, B Mumbai Chowpatty, C Udupi Sagar — all under ₹800 and well before 8 pm. Which one, or want any swaps?"
+    },
+    {
+      "text": "Order dinner for 6 people. She has celiac disease.",
+      "labelled_allergens": [
+        "gluten"
+      ],
+      "used_allergens": [
+        "gluten"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 2815.3,
+      "reply_ms": 5760.9,
+      "reply": "I read celiac as a strict gluten-free requirement for the whole shared order, flagged as severe, so all breads and wheat dishes were left out. Options A (Lucknowi Zaika), B (Delhi Darbar) and C (Shah Ghouse Cafe) are on your card; allergen data comes from the restaurant and the allergy is in the order note.\n\nWant one of these, or any swaps?"
+    },
+    {
+      "text": "party of 5, dinner please Four are vegetarian. She has celiac disease. Under 3k. By 8:30 pm.",
+      "labelled_allergens": [
+        "gluten"
+      ],
+      "used_allergens": [
+        "gluten"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 3851.7,
+      "reply_ms": 6458.9,
+      "reply": "I treated celiac as a strict gluten allergy across the whole order, so all breads/rotis were left out. A is Mughlai with chicken for the one non-veg, B is all-veg, C mixes both.\n\nAllergen data comes from the restaurant, and the gluten allergy is in the order note. Want any swaps, or shall I confirm one?"
+    },
+    {
+      "text": "party of 9, dinner please One has a sesame allergy. Within rs 2500. Before 9pm.",
+      "labelled_allergens": [
+        "sesame"
+      ],
+      "used_allergens": [
+        "sesame"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 3621.0,
+      "reply_ms": 6184.5,
+      "reply": "Three options above, all sesame-free for the whole table and mild-leaning, delivered well before 9pm. Allergen data comes from the restaurant and the sesame allergy is in the order note.\n\nWhich one — A (Amritsari Dhaba), B (Beijing Bites) or C (Lucknowi Zaika)?"
+    },
+    {
+      "text": "Lunch for 4 guests. All veg. My son has a severe nut allergy. Budget 1500.",
+      "labelled_allergens": [
+        "peanut",
+        "tree_nut"
+      ],
+      "used_allergens": [
+        "peanut",
+        "tree_nut"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 2615.8,
+      "reply_ms": 5578.8,
+      "reply": "I read \"nut allergy\" as both peanut and tree nut, flagged severe — happy to narrow it if it's only one. Cashew-based dishes like paneer butter masala and kormas were left out for safety; allergen data comes from the restaurant and the allergy is on the order note. Options A, B, C are above — which one, or want any swaps?"
+    },
+    {
+      "text": "Lunch for 7 guests. One is allergic to fish. Within rs 2500. By 7:30pm.",
+      "labelled_allergens": [
+        "fish"
+      ],
+      "used_allergens": [
+        "fish"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 3098.8,
+      "reply_ms": 6198.1,
+      "reply": "Three shared bundles for 7, all fish-free and mild (your spice level 2): A Amritsari Dhaba, B Lucknowi Zaika, C Spice Route Kitchen. Allergen data comes from the restaurant and the fish allergy is on the order note; A leaves out an egg curry with unverified allergen info. Want any swaps, or shall I confirm one?"
+    },
+    {
+      "text": "We are 10 people, need dinner. Six are vegetarian. One of us can't eat cashew. Not more than 1200 rupees. Before 9pm.",
+      "labelled_allergens": [
+        "tree_nut"
+      ],
+      "used_allergens": [
+        "tree_nut"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 5449.7,
+      "reply_ms": 9084.6,
+      "reply": "I treated the cashew allergy as all tree nuts to be safe (I can narrow it to cashew only if you prefer), and kept everything under ₹1200 for 10 with delivery well before 9pm.\n\nOptions A (Chennai Mess), B (Udupi Sagar, pure-veg kitchen) and C (Kerala Kitchen) are on your screen; cashew-based dishes like Vegetable Kurma were left out. Allergen data comes from the restaurant and the allergy is in the order note — which one would you like?"
+    },
+    {
+      "text": "order food for six people Three are vegetarian. One has a nut allergy. Under 3k.",
+      "labelled_allergens": [
+        "peanut",
+        "tree_nut"
+      ],
+      "used_allergens": [
+        "peanut",
+        "tree_nut"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 3026.9,
+      "reply_ms": 5948.7,
+      "reply": "I read \"nut allergy\" as both peanut and tree nut, and kept every dish in all three options free of both — happy to narrow it to just one if you know. All three came back fully vegetarian since cashew-based gravies and most non-veg mains were excluded for safety.\n\nWant A, B or C, or should I add a chicken dish that's nut-free?"
+    },
+    {
+      "text": "dinner for 8 One is allergic to fish. Under 3k.",
+      "labelled_allergens": [
+        "fish"
+      ],
+      "used_allergens": [
+        "fish"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 3065.8,
+      "reply_ms": 6698.9,
+      "reply": "Three fish-free options for 8, all under ₹3k, kept mild to your spice level: A Amritsari Dhaba (dessert-heavy, earliest ETA), B Lucknowi Zaika (cheapest), C Spice Route Kitchen (your usual place). Allergen data comes from the restaurant and the fish allergy is in the order note — A also left out an Egg Curry with unverified allergen info. Which one, or want any swaps?"
+    },
+    {
+      "text": "dinner for 4 Three are vegetarian. One has a sesame allergy. Not more than 1200 rupees.",
+      "labelled_allergens": [
+        "sesame"
+      ],
+      "used_allergens": [
+        "sesame"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 3516.2,
+      "reply_ms": 5826.0,
+      "reply": "Three options above, all sesame-free across the whole order (I kept it sesame-free for everyone since it's shared), 3 veg + 1 non-veg eater, mild spice. Allergen data comes from the restaurant and the sesame allergy is in the order note.\n\nWhich one would you like — A, B or C, or any tweaks?"
+    },
+    {
+      "text": "Order dinner for 7 people. All veg. One has a dairy allergy.",
+      "labelled_allergens": [
+        "dairy"
+      ],
+      "used_allergens": [
+        "dairy"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 2474.0,
+      "reply_ms": 5389.4,
+      "reply": "Three all-veg, fully dairy-free options (A Amritsari Dhaba, B Lucknowi Zaika, C Shah Ghouse Cafe) — paneer and butter dishes were left out for safety, and I kept spice mild per your profile. Allergen data comes from the restaurant and the dairy allergy is in the order note.\n\nWhich one would you like, or shall I tweak something?"
+    },
+    {
+      "text": "dinner for 4, she can't have peanuts or sesame",
+      "labelled_allergens": [
+        "peanut",
+        "sesame"
+      ],
+      "used_allergens": [
+        "peanut",
+        "sesame"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 2394.3,
+      "reply_ms": 5478.1,
+      "reply": "Three shared-safe options (A Amritsari Dhaba, B Curry Leaf Bistro, C Lucknowi Zaika) — every dish is peanut- and sesame-free for the whole table, and I kept spice mild. Allergen data comes from the restaurant and the allergy is in the order note; A left out an egg curry with unverified info. Which one, or want any swaps?"
+    },
+    {
+      "text": "dinner for 6, two people can't have dairy",
+      "labelled_allergens": [
+        "dairy"
+      ],
+      "used_allergens": [
+        "dairy"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 2511.9,
+      "reply_ms": 4700.3,
+      "reply": "Since it's a shared order, I kept every dish dairy-free across all 6 — that's why paneer/butter dishes are left out. Options A, B and C are above, all mild to match your spice preference.\n\nAllergen data comes from the restaurant, and the dairy allergy is in the order note. Want any swaps, or shall I confirm one?"
+    },
+    {
+      "text": "dinner for 5, one has a nut allergy",
+      "labelled_allergens": [
+        "peanut",
+        "tree_nut"
+      ],
+      "used_allergens": [
+        "peanut",
+        "tree_nut"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 2329.6,
+      "reply_ms": 5121.1,
+      "reply": "I read \"nut allergy\" as both peanut and tree nut, and kept the whole shared order free of both — happy to narrow it to just one. Allergen data comes from the restaurant and the allergy is in the order note.\n\nA Amritsari Dhaba, B The Curry Leaf Bistro, C Lucknowi Zaika — want any tweaks, or shall I confirm one?"
+    },
+    {
+      "text": "dinner for 4, milk allergy",
+      "labelled_allergens": [
+        "dairy"
+      ],
+      "used_allergens": [
+        "dairy"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 2604.7,
+      "reply_ms": 6152.0,
+      "reply": "I read \"milk allergy\" as dairy and kept the whole order dairy-free, with mild spice for 4 — options A (Amritsari Dhaba), B (Lucknowi Zaika), C (Shah Ghouse Cafe) are above. Paneer, butter and korma dishes were left out for safety; allergen data comes from the restaurant and the allergy is in the order note. Which one, or want any swaps?"
+    },
+    {
+      "text": "dinner for 4, one guest is allergic to sesame",
+      "labelled_allergens": [
+        "sesame"
+      ],
+      "used_allergens": [
+        "sesame"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 2494.1,
+      "reply_ms": 4758.9,
+      "reply": "Three sesame-free options for 4, kept mild to your usual spice level: A Amritsari Dhaba, B The Curry Leaf Bistro, C Lucknowi Zaika. Allergen data comes from the restaurant and the sesame allergy is in the order note. Which one, or want any swaps?"
+    },
+    {
+      "text": "dinner for 2, I'm allergic to shrimp",
+      "labelled_allergens": [
+        "shellfish"
+      ],
+      "used_allergens": [
+        "shellfish"
+      ],
+      "allergen_kept": true,
+      "state": "RECOMMENDING",
+      "bundles": 3,
+      "violations": [],
+      "tools": [
+        "recommend_bundles"
+      ],
+      "error": null,
+      "first_view_ms": 2330.6,
+      "reply_ms": 4712.5,
+      "reply": "I read your shrimp allergy as shellfish and kept every dish in all three bundles shellfish-free; allergen data comes from the restaurant and the allergy is in the order note.\n\nA is mild north Indian, B is all-veg, C is Mughlai. Want any swaps, or shall I confirm one?"
+    }
+  ]
+}

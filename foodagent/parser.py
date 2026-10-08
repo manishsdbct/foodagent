@@ -33,16 +33,22 @@ CUISINES = {
 REGIONS = ["delhi", "punjab", "hyderabad", "kolkata", "mumbai", "karnataka", "bengaluru", "chennai", "lucknow"]
 TASTES = {r"\bsweet|dessert|meetha|mithai": ("sweet", 3), r"\btangy|chatpata|khatta": ("tangy", 3),
           r"\bsmoky|tandoori|charred": ("smoky", 3), r"\brich|creamy|buttery": ("rich", 3)}
+# Allergen words, matched only in a clause that also says to avoid them (see _allergens).
 ALLERGY_PATTERNS = [
-    (r"\bnuts?\b(?!\s*free\s+is\s+fine)", {"peanut", "tree_nut"}),
-    (r"peanut|groundnut|moongphali", {"peanut"}),
-    (r"cashew|almond|pistachio|walnut|tree[- ]nut|kaju|badam", {"tree_nut"}),
-    (r"gluten|wheat|celiac|coeliac", {"gluten"}),
-    (r"dairy|lactose|milk allerg", {"dairy"}),
-    (r"egg allerg|allergic to eggs?|no eggs?\b|eggless", {"egg"}),
-    (r"\bsoy|soya", {"soy"}), (r"sesame|\btil\b", {"sesame"}),
-    (r"shellfish|prawn|shrimp|crab", {"shellfish"}), (r"\bfish allerg", {"fish"}),
+    (r"(?<!tree )(?<!tree-)\bnuts?\b(?!\s*free\s+is\s+fine)", {"peanut", "tree_nut"}),  # a generic nut allergy is both
+    (r"peanuts?|groundnuts?|moongphali", {"peanut"}),
+    (r"cashews?|almonds?|pistachios?|walnuts?|hazelnuts?|pecans?|tree[- ]nuts?|\bkaju\b|\bbadam\b", {"tree_nut"}),
+    (r"gluten|\bwheat\b|celiac|coeliac|\bmaida\b", {"gluten"}),
+    (r"dairy|lactose|\bmilk\b(?!\s*shake)|\bcheese\b", {"dairy"}),
+    (r"\beggs?\b", {"egg"}),
+    (r"\bsoy|\bsoya\b|soybeans?", {"soy"}), (r"sesame|\btil\b", {"sesame"}),
+    (r"seafood", {"fish", "shellfish"}),
+    (r"shellfish|prawns?|shrimps?|crabs?|lobsters?", {"shellfish"}), (r"(?<!shell)\bfish(?:es)?\b", {"fish"}),
+    (r"mustard|\bsarson\b", {"mustard"}),
 ]
+# Words that turn a mention into an avoidance: "allergic to fish", "no milk", "can't have dairy", "gluten-free".
+AVOID = (r"allerg|intoleran|\bfree\b|\bno\b|\bnot\b|without|avoid|sensitiv|react|celiac|coeliac|"
+         r"(?:can'?t|cannot|can not|don'?t|doesn'?t|do not|does not|won'?t|shouldn'?t|must not|never) (?:eat|have|take|tolerate)")
 
 
 def _num(tok: str) -> int:
@@ -57,6 +63,25 @@ def _parse_time(hour: int, minute: int, ampm: str | None, now: datetime) -> date
     elif ampm is None and 1 <= hour < 12 and hour <= now.hour:
         hour += 12  # "by 8" said at 18:45 means 20:00; "by 11" said at 10:00 stays 11:00
     return now.replace(hour=hour % 24, minute=minute, second=0, microsecond=0)
+
+
+def _allergens(t: str) -> set[str]:
+    """Allergens named in a clause that also says to avoid them, so "allergic to fish" counts and "we love fish
+    curry" does not. Clauses split at sentence ends and at commas; a comma clause made only of allergen words
+    continues the list before it ("allergic to fish, milk and eggs")."""
+    found: set[str] = set()
+    for sentence in re.split(r"[.;!?\n]|\bbut\b", t):
+        avoiding = False
+        for clause in sentence.split(","):
+            hits = set().union(*[codes for pattern, codes in ALLERGY_PATTERNS if re.search(pattern, clause)])
+            listing = bool(hits) and not re.sub(r"|".join(p for p, _ in ALLERGY_PATTERNS) + r"|\band\b|\bor\b|\s", "", clause)
+            if re.search(r"\b(?:nobody|no one|none of us|not allergic)\b", clause):  # "nobody is allergic to fish"
+                avoiding = False
+                continue
+            avoiding = bool(re.search(AVOID, clause)) or (avoiding and listing)
+            if avoiding:
+                found |= hits
+    return found
 
 
 def parse_rules(text: str, now: datetime) -> dict:
@@ -82,11 +107,7 @@ def parse_rules(text: str, now: datetime) -> dict:
             out["veg_count"] = _num(m.group(1))
 
     # Allergies (whole-word nut rule first; peanut never matches \bnut)
-    allergens: set[str] = set()
-    if re.search(r"allerg|intoleran|free\b|\bno\b|without|can'?t eat|avoid", t):
-        for pattern, codes in ALLERGY_PATTERNS:
-            if re.search(pattern, t):
-                allergens |= codes
+    allergens = _allergens(t)
     if re.search(r"\bnuts?\b", t) and not re.search(r"peanut|tree[- ]nut|cashew|almond", t):
         out["notes"].append("I've treated \"nut allergy\" as both peanuts and tree nuts (cashew, almond, pistachio).")
     out["allergens"] = allergens

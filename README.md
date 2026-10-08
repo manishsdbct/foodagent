@@ -60,12 +60,12 @@ flowchart LR
     UI[− / + buttons] -.->|instant edit,<br/>no AI call| T
 ```
 
-**What happens in one request:**
+**What happens in one request** (options on screen in about 3 seconds):
 
 1. **Guardrail:** the message is screened for prompt injection, card numbers or OTPs, and attempts to set prices.
 2. **Understand:** Claude turns the sentence into structured constraints: headcount, veg count, allergens, budget, deadline.
 3. **Recommend:** the engine filters out unsafe dishes, then an optimiser builds bundles with enough mains and breads for everyone, keeps them under budget and checks delivery time.
-4. **Reply:** Claude explains the options. A checker confirms every ₹ amount and dish name came from the engine. If not, the reply is rewritten once, then replaced with a plain summary of the tool data.
+4. **Show, then reply:** the option cards stream to the page as soon as the engine returns them. Claude adds a one-to-three sentence reply. A checker confirms every ₹ amount and dish name came from the engine. If not, the reply is rewritten once, then replaced with a plain summary of the tool data.
 5. **Edit, confirm, order:** every edit is re-checked. The order needs a confirm token plus an explicit "yes", and a retry can never charge twice.
 
 **The six tools:** `get_user_context` · `recommend_bundles` · `modify_bundle` · `check_eta` · `confirm_cart` · `place_order`
@@ -84,26 +84,43 @@ flowchart LR
 
 ## 4. Evals
 
-A release gate runs 240 generated requests through the engine. An **independent auditor** recomputes every total, arrival time and allergen from the raw data instead of trusting the engine.
+There are two evals. Both save their results to the repo, so every number below can be checked: [eval_results.json](eval_results.json) and [eval_live_results.json](eval_live_results.json).
+
+**Offline release gate** (`python -m foodagent.eval`, about 90 s, free). This runs 240 generated requests through the engine. An **independent auditor** recomputes every total, arrival time and allergen from the raw data instead of trusting the engine.
 
 | Check | Result |
 | --- | --- |
-| Requests tested | **240** (617 bundles shown) |
+| Requests tested | **240** (602 bundles shown) |
 | Allergen, diet, budget or deadline violations | **0** |
-| Unsafe "add this dish" requests refused | **2,633 / 2,633** |
-| Sampled conversations ordered cleanly | **48 / 48** |
+| Unsafe "add this dish" requests refused | **2,746 / 2,746** |
+| Sampled conversations ordered cleanly | **55 / 55** |
 | Request-understanding (parse) accuracy | **100%** |
+| Allergy phrasings, held out from the generator ("allergic to fish", "can't have dairy", "no seafood", "nobody is allergic to fish") | **36 / 36** |
 | Attack inputs blocked (injection, card numbers, ₹0) | **18 / 18** |
 | Normal messages wrongly blocked | **0 / 262** |
-| Reply checks correct | **7 / 7** |
-| Recommendation speed (engine) | median **0.1 s**, p95 **1.2 s** |
-| Unit and integration tests | **73 passed** |
+| Unit and integration tests | **111 passed** |
 | **Release gate** | ✅ **PASS** |
 
+**Live Claude eval** (`python -m foodagent.eval --live 20`, about 3 minutes, uses API tokens). This sends 20 real requests through Claude, set up exactly like the web chat, and audits what it built and showed.
+
+| Check | Result |
+| --- | --- |
+| Allergens Claude dropped from the order | **0 / 20** |
+| Rule violations in the bundles it showed | **0** |
+| Errors, or questions asked instead of recommending | **0** |
+| Time until the options are on screen | median **3.0 s**, p95 **3.9 s** (target 4 s); slowest request 5.4 s |
+| Time until Claude's full reply | median **5.9 s**, p95 **6.9 s** |
+| **Live gate** | ✅ **PASS** |
+
+**What the evals found and fixed:**
+- **Allergy phrasings:** plain sentences like "allergic to fish", "allergic to milk" and "can't have dairy" used to come back with no allergen. The old parser got 20 of the 36 held-out phrasings right. It now reads allergens per clause, and the release gate fails if any of the 36 is wrong.
+- **Latency:** the first reply used to take 10–14 s, because of three model calls in a row plus a long reply. The customer profile is now sent with the first message, so one round trip is gone. Cards stream to the page as soon as the engine has them, and Claude's reply is one to three sentences, since the cards already show the details.
+- **An unnecessary question:** the live eval caught Claude asking which diner had the allergy. A shared order is allergen-free for everyone, so the prompt now says not to ask.
+
 **Honest caveats:**
-- The requests come from templates. Accuracy on messy real-world phrasing will be lower, so a labelled set of real requests is the next step.
-- In Claude mode, a dish search like "spicy paneer" currently returns full meal bundles and doesn't always apply the spice filter. This is a known gap.
-- In live Claude mode, a full reply takes about **10–13 seconds**, against under 1 second for the offline agent. Button edits stay instant in both modes.
+- The 240 requests come from templates. Accuracy on messy real-world phrasing will be lower, so a labelled set of real customer requests is the next step.
+- The live sample is 20 requests, so its p95 is roughly the second-slowest run. Bigger groups take longer (the 5.4 s case was 10 people). Opus fast mode is supported (`ANTHROPIC_AGENT_SPEED=fast`) but isn't enabled on this API account.
+- In Claude mode, a dish search like "spicy paneer" returns full meal bundles and doesn't always apply the spice filter.
 
 ---
 
@@ -120,9 +137,9 @@ For live Claude mode, export your `ANTHROPIC_API_KEY` in the shell (never commit
 | Command | What it does |
 | --- | --- |
 | `python -m foodagent.cli --now 18:45` | Same assistant, in the terminal |
-| `python -m foodagent.eval` | Eval suite and release gate (about 90 s) |
+| `python -m foodagent.eval` | Offline eval and release gate (about 90 s); add `--live 20` to also test Claude (uses tokens) |
 | `python -m foodagent.metrics` | Conversion, turns to order and latency, from the chat log |
-| `python -m pytest -q` | 73 tests |
+| `python -m pytest -q` | 111 tests |
 
 ---
 

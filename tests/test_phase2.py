@@ -12,13 +12,13 @@ from pydantic import ValidationError
 from foodagent import eta
 from foodagent.bundler import EXTRA_SHARE, SLACK, dp_bundles, is_balance
 from foodagent.engine import block_reason, recommend_bundles, score_item, violations
-from foodagent.eval import run as run_eval
+from foodagent.eval import ALLERGY_PARAPHRASES, run as run_eval
 from foodagent.models import Constraints, load_data
 from foodagent.orchestrator import Orchestrator, unverified_amounts
 from foodagent.orders import OrderService
 from foodagent.parser import parse_rules
 from foodagent.schema import OrderConstraints
-from foodagent.session import SessionStore
+from foodagent.session import SessionStore, run_turn
 from foodagent.tools import Session, Tools, tool_definitions
 from foodagent.web import build_handler
 
@@ -257,6 +257,44 @@ def test_orchestrator_caps_tool_calls_per_turn():
 def test_unverified_amounts():
     assert unverified_amounts("₹1,887 total, under ₹2,000", {1887.0, 2000.0}) == []
     assert unverified_amounts("only Rs 150 more", {1887.0}) == ["Rs 150"]
+
+
+@pytest.mark.parametrize("text,want", ALLERGY_PARAPHRASES)
+def test_allergy_paraphrases(text, want):
+    """Everyday phrasings ("allergic to fish", "can't have dairy", "no seafood") and mentions that are not
+    allergies ("we love fish curry", "nobody is allergic to fish")."""
+    assert parse_rules(text, NOW)["allergens"] == want
+
+
+def test_orchestrator_sends_cards_before_the_reply_is_written():
+    client = FakeClient([tool_block(1, "recommend_bundles", {"constraints": LLM_CONSTRAINTS}),
+                         lambda msgs: text_block("I read the nut allergy as peanut and tree nut. Which one?")])
+    agent = Orchestrator(NOW, client=client, cards=True)
+    seen = []
+    reply, row = run_turn(agent, "s", EXAMPLE, on_view=lambda v: seen.append((v["tool"], len(client.calls))))
+    assert seen == [("recommend_bundles", 1)]          # drawn after the first model call, before the second
+    assert row["first_view_ms"] is not None and row["first_view_ms"] <= row["ms"]
+    first = client.calls[0]
+    assert "[Customer profile" in first["messages"][0]["content"]  # no get_user_context round trip
+    assert "Do not repeat those details" in first["system"][0]["text"]
+    assert agent.on_view is None
+
+
+def test_web_chat_stream_sends_view_then_done():
+    def agent():
+        return Orchestrator(NOW, client=FakeClient([tool_block(1, "recommend_bundles", {"constraints": LLM_CONSTRAINTS}),
+                                                    text_block("Three nut-free options. Which one?")]), cards=True)
+    server = ThreadingHTTPServer(("127.0.0.1", 0), build_handler(SessionStore(agent)))
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{server.server_address[1]}/api/chat/stream",
+                                     json.dumps({"message": EXAMPLE}).encode(), {"content-type": "application/json"})
+        lines = [json.loads(ln) for ln in urllib.request.urlopen(req).read().splitlines()]
+        assert [m["type"] for m in lines] == ["view", "done"]
+        assert [b["t"] for b in lines[0]["view"]][:2] == ["look", "bundle"] and lines[0]["state"] == "RECOMMENDING"
+        assert lines[1]["reply"].startswith("Three nut-free") and lines[1]["view"] == lines[0]["view"]
+    finally:
+        server.shutdown()
 
 
 # ---------------------------------------------------------------- sessions & web

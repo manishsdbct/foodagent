@@ -26,11 +26,11 @@ def local_now(hhmm: str | None = None) -> datetime:
     return now
 
 
-def make_agent(now: datetime, use_llm: bool, orders: OrderService, trace_path: Path | None = None):
+def make_agent(now: datetime, use_llm: bool, orders: OrderService, trace_path: Path | None = None, cards: bool = False):
     """Claude orchestrator when an API key is set and LLM use is on; otherwise the offline rule agent."""
     if use_llm and os.environ.get("ANTHROPIC_API_KEY"):
         from .orchestrator import Orchestrator
-        return Orchestrator(now, orders=orders, trace_path=trace_path)
+        return Orchestrator(now, orders=orders, trace_path=trace_path, cards=cards)  # cards: the web page draws tool results
     from .agent import Agent
     return Agent(now, use_llm=False, orders=orders)
 
@@ -58,14 +58,23 @@ class SessionStore:
             self._items.pop(session_id, None)
 
 
-def run_turn(agent, session_id: str, message: str) -> tuple[str, dict]:
+def run_turn(agent, session_id: str, message: str, on_view=None) -> tuple[str, dict]:
     """One chat turn plus its log row: latency, the tool calls it made, any guardrail that fired, and
     any error. The input guardrail can answer without calling the agent; the output guardrail checks
     every reply. An exception becomes a plain apology and the session is kept (design doc: tell the
-    customer, keep the state)."""
+    customer, keep the state). on_view (web) receives each card-worthy tool result as soon as it exists;
+    first_view_ms records when the customer could first see one."""
     trace = getattr(getattr(agent, "session", None), "trace", [])  # tool calls (model orchestrator only)
     seen, start, error = len(trace), time.perf_counter(), None
     check = guardrails.check_input(message)
+    first: dict = {}
+
+    def view_ready(result: dict) -> None:
+        first.setdefault("ms", round((time.perf_counter() - start) * 1000, 1))
+        if on_view:
+            on_view(result)
+    if hasattr(agent, "on_view"):
+        agent.on_view = view_ready
     try:
         reply = check.reply if check.reply is not None else agent.handle(check.text)
     except Exception as exc:
@@ -76,7 +85,9 @@ def run_turn(agent, session_id: str, message: str) -> tuple[str, dict]:
     row = {"ts": datetime.now().astimezone().isoformat(timespec="seconds"), "request_id": secrets.token_hex(4),
            "session_id": session_id, "agent": type(agent).__name__, "message": check.logged, "reply": reply,
            "state": agent.state, "tools": trace[seen:], "error": error, "guardrails": check.flags + out_flags,
-           "ms": round((time.perf_counter() - start) * 1000, 1)}
+           "ms": round((time.perf_counter() - start) * 1000, 1), "first_view_ms": first.get("ms")}
+    if hasattr(agent, "on_view"):
+        agent.on_view = None
     return reply, row
 
 

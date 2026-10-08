@@ -5,6 +5,8 @@
 
 POST /api/chat  {"session_id": str|null, "message": str}  ->  {"session_id", "reply", "state", "view"}
                 (view: the turn's tool result as card blocks, Claude orchestrator only; else null)
+POST /api/chat/stream  same body; NDJSON lines {"type": "view", "view", "state"} as cards are ready,
+                then {"type": "done"} with the /api/chat fields (the page uses this one)
 POST /api/edit  {"session_id", "bundle_id", "item", "qty"}  ->  {"ok", "message", "state", "view"}
                 (a quantity button: one engine edit, no model call; qty 0 removes the dish)
 POST /api/reset {"session_id": str}
@@ -418,6 +420,14 @@ async function editQty(ctx,name,qty,btn){if(busy)return;const card=btn.closest('
   drawSteps(r.state);drawChips(r.state)}
  catch(e){cardNote(card,e.message)}
  finally{busy=false;card.classList.remove('pending')}}
+/* one chat turn over /api/chat/stream: cards arrive as soon as the engine has them, the reply after */
+async function chat(text,onView){const r=await fetch('/api/chat/stream',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({session_id:sid,message:text})});
+ if(!r.ok||!r.body){const t=await r.text();let m=t;try{m=JSON.parse(t).error||t}catch(e){}throw new Error(m)}
+ const rd=r.body.getReader(),dec=new TextDecoder();let buf='',done=null;
+ for(;;){const{value,done:end}=await rd.read();if(value)buf+=dec.decode(value,{stream:true});let i;
+  while((i=buf.indexOf('\n'))>=0){const ln=buf.slice(0,i).trim();buf=buf.slice(i+1);if(!ln)continue;const m=JSON.parse(ln);if(m.type==='view')onView(m);else if(m.type==='done')done=m}
+  if(end)break}
+ if(!done)throw new Error('the connection closed before the reply arrived');return done}
 const STATUS=['Reading your request','Checking allergens','Comparing restaurants','Pricing bundles','Checking delivery times'];
 let busy=false;
 async function send(text){text=text.trim();if(!text||busy)return;busy=true;$('#send').disabled=true;
@@ -425,10 +435,13 @@ async function send(text){text=text.trim();if(!text||busy)return;busy=true;$('#s
  push(h('div','msg me',h('div','bubble',text)),'end');q.value='';chips.innerHTML='';
  const label=h('span',null,STATUS[0]+'…');const wait=botRow(h('div','typing',[h('span','dots',[h('i'),h('i'),h('i')]),label]));push(wait,'end');
  let k=0;const tick=setInterval(()=>{k=(k+1)%STATUS.length;label.style.opacity=0;setTimeout(()=>{label.textContent=STATUS[k]+'…';label.style.opacity=1},250)},1800);
- try{const r=await post('/api/chat',{session_id:sid,message:text});sid=r.session_id;try{sessionStorage.setItem('sid',sid)}catch(e){}
+ let early=null;
+ const onView=v=>{if(!v.view?.length)return;sid=v.session_id;const body=render(v.view);body.append(h('div','typing',[h('span','dots',[h('i'),h('i'),h('i')]),h('span',null,'Writing a reply…')]));
+  const row=botRow(body);(early||wait).replaceWith(row);if(!early)row.scrollIntoView({behavior:'smooth',block:'start'});early=row;drawSteps(v.state)};
+ try{const r=await chat(text,onView);sid=r.session_id;try{sessionStorage.setItem('sid',sid)}catch(e){}
   const blocks=r.view?.length?[...r.view.filter(b=>b.t==='look'),...prose(r.reply,r.view),...r.view.filter(b=>b.t!=='look')]:parse(r.reply);
-  const row=botRow(render(blocks));wait.replaceWith(row);row.scrollIntoView({behavior:'smooth',block:'start'});drawSteps(r.state);drawChips(r.state)}
- catch(e){wait.replaceWith(botRow(h('div','body',h('div','bubble','Something went wrong: '+e.message)),'err'));drawChips()}
+  const row=botRow(render(blocks));(early||wait).replaceWith(row);if(!early)row.scrollIntoView({behavior:'smooth',block:'start'});drawSteps(r.state);drawChips(r.state)}
+ catch(e){(early||wait).replaceWith(botRow(h('div','body',h('div','bubble','Something went wrong: '+e.message)),'err'));drawChips()}
  finally{clearInterval(tick);busy=false;$('#send').disabled=false;q.focus()}}
 async function reset(){if(sid)await post('/api/reset',{session_id:sid}).catch(()=>{});sid=null;try{sessionStorage.removeItem('sid')}catch(e){}
  log.innerHTML='';hero.hidden=false;drawSteps('GATHERING');drawChips('GATHERING');window.scrollTo({top:0,behavior:'smooth'});q.focus()}
@@ -538,18 +551,34 @@ def build_handler(store: SessionStore, turn_log: TurnLog | None = None):
                 return self._json(200, {"ok": True})
             if self.path == "/api/edit":
                 return self._edit(data)
-            if self.path != "/api/chat":
+            if self.path not in ("/api/chat", "/api/chat/stream"):
                 return self._json(404, {"error": "not found"})
             message = str(data.get("message", "")).strip()[:2000]
             if not message:
                 return self._json(400, {"error": "message is required"})
             sid, agent = store.get(data.get("session_id"))
+            stream = self.path == "/api/chat/stream"
+            if stream:  # NDJSON: a "view" line as soon as a card exists, then "done" with the reply
+                self.send_response(200)
+                self.send_header("content-type", "application/x-ndjson; charset=utf-8")
+                self.send_header("cache-control", "no-store")
+                self.end_headers()
+
+            def line(obj: dict) -> None:
+                try:
+                    self.wfile.write((json.dumps(obj, ensure_ascii=False) + "\n").encode())
+                    self.wfile.flush()
+                except OSError:  # the page went away; the turn still finishes and is logged
+                    pass
+            on_view = (lambda result: line({"type": "view", "session_id": sid, "state": agent.state,
+                                            "view": ui_view(result)})) if stream else None
             with locks.setdefault(sid, threading.Lock()):  # one turn at a time per chat
-                reply, row = run_turn(agent, sid, message)
+                reply, row = run_turn(agent, sid, message, on_view)
             if turn_log:
                 turn_log.write(row)
             view = ui_view(getattr(agent, "turn_view", None)) if row["tools"] else None  # guardrail-only turns draw no cards
-            return self._json(200, {"session_id": sid, "reply": reply, "state": agent.state, "view": view})
+            done = {"session_id": sid, "reply": reply, "state": agent.state, "view": view}
+            return line({"type": "done", **done}) if stream else self._json(200, done)
 
         def _edit(self, data: dict):
             """− / + / bin on a card: one engine edit, no model call. Only the Claude orchestrator has it;
@@ -591,7 +620,7 @@ def main() -> None:
     db_url = db.database_url()
     orders = OrderService(Path("orders.jsonl"), db_url)
     trace = Path("trace.jsonl")
-    store = SessionStore(lambda: make_agent(local_now(args.now), not args.no_llm, orders, trace))
+    store = SessionStore(lambda: make_agent(local_now(args.now), not args.no_llm, orders, trace, cards=True))
     server = ThreadingHTTPServer((args.host, args.port), build_handler(store, TurnLog(Path("requests.jsonl"), db_url)))
     db.load_catalog(db_url)  # fail at startup, not on the first chat, if the database is missing
     print(f"Food assistant on http://{args.host}:{args.port}  (Ctrl+C to stop)  data: {db_url}")

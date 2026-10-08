@@ -7,7 +7,7 @@ About 8 minutes, fully offline. The clock is fixed at 18:45 so ETAs and the 8 PM
 ```bash
 pg_isready                                        # Postgres must say "accepting connections"
 .venv/bin/python -m foodagent.db init             # safe to re-run; prints "40 restaurants, 836 dishes"
-.venv/bin/python -m pytest -q                     # expect: 73 passed
+.venv/bin/python -m pytest -q                     # expect: 111 passed
 .venv/bin/python -m foodagent.web --now 18:45 --no-llm
 ```
 
@@ -41,4 +41,4 @@ Optional extras:
 
 ## Live Claude mode (optional)
 
-Set `ANTHROPIC_API_KEY` and start the server without `--no-llm`. Claude then plans each turn and writes the replies, while the same engine and checks decide safety and price. The same guardrails run in this mode, plus a check that every price and dish name in the model's reply came from a tool. In the dev sessions so far, the first recommendation took 9 to 11 seconds, against 0.3 seconds for the offline agent, and replies may not always render as cards. Use the offline mode for the main demo.
+Set `ANTHROPIC_API_KEY` and start the server without `--no-llm`. Claude then plans each turn and writes the replies, while the same engine and checks decide safety and price. The same guardrails run in this mode, plus a check that every price and dish name in the model's reply came from a tool. In the live eval (20 requests), the option cards appeared after a median of 3.0 s (p95 3.9 s), and Claude's short reply followed at about 6 s; the offline agent answers in 0.3 s. The − / + buttons are instant in both modes. Offline mode is still the safest choice for the main demo, since it needs no network.

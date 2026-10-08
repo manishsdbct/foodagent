@@ -13,7 +13,7 @@ export ANTHROPIC_API_KEY                         # set it to your key first: Cla
 python -m foodagent.cli --now 18:45
 python -m foodagent.eval                         # offline eval suite + release gate (on the database catalog)
 python -m foodagent.metrics                      # session metrics from the chat log vs the doc's v1 targets
-python -m pytest -q                              # 73 tests (fixed seed catalog + a separate foodagent_test database)
+python -m pytest -q                              # 111 tests (fixed seed catalog + a separate foodagent_test database)
 ```
 
 Python 3.10+ and a running Postgres 14+. If no API key is set, the CLI and web UI fall back to the offline rule agent, so everything runs without a network.
@@ -21,6 +21,7 @@ Python 3.10+ and a running Postgres 14+. If no API key is set, the CLI and web U
 Environment variables (all optional; see `.env.example`):
 - `ANTHROPIC_AGENT_MODEL`: orchestrator model, default `claude-opus-5`.
 - `ANTHROPIC_AGENT_EFFORT`: default `low`, because chat is latency-sensitive.
+- `ANTHROPIC_AGENT_SPEED`: set to `fast` for Opus fast mode (faster output at premium pricing). Off by default; if the account has no fast-mode quota, calls fall back to standard speed.
 - `ANTHROPIC_MODEL`: model for the rule agent's optional Claude parser, default `claude-haiku-4-5`.
 - `DATABASE_URL`: the Postgres database, default `postgresql://localhost/foodagent`.
 - `FOODAGENT_DECLINE_PAYMENTS`: comma-separated saved payment methods the mock gateway declines, e.g. `"saved UPI"`, to try the payment-failure flow.
@@ -86,11 +87,11 @@ The JSONL files (`orders.jsonl`, `requests.jsonl`, `trace.jsonl`) are still writ
 | `foodagent/bundler.py` | Stage 4 DP: multiple-choice knapsack over (coverage, cost) with Pareto fronts. Keeps the best 2 bundles per restaurant |
 | `foodagent/engine.py` | Stages 1–3 and 5: candidates, hard filters, item scoring, ranking and diversity, reason codes. Also edits, substitutes, and the greedy fallback |
 | `foodagent/tools.py` | The six tools: `get_user_context`, `recommend_bundles`, `modify_bundle`, `check_eta`, `confirm_cart`, `place_order`. Each call is traced |
-| `foodagent/orchestrator.py` | Claude tool loop: max 8 tool calls a turn, prompt caching, `fallbacks: "default"`, and a post-check that every ₹ amount and dish name came from a tool |
+| `foodagent/orchestrator.py` | Claude tool loop: max 8 tool calls a turn, prompt caching, `fallbacks: "default"`, a post-check that every ₹ amount and dish name came from a tool, the customer profile sent with the first message (no `get_user_context` round trip), and short card-mode replies for the web |
 | `foodagent/guardrails.py` | Input and output guardrails run on every turn, for both agents (see Guardrails below) |
 | `foodagent/orders.py` | Server-side re-check, 5-minute confirm token, idempotent `place_order`, allergy note, mock payment gateway (a decline holds the cart 10 min) |
 | `foodagent/agent.py` | Offline rule agent (state machine), used when no API key is set |
-| `foodagent/session.py`, `web.py`, `cli.py` | Session memory with a 2-hour idle TTL, the per-turn runner and log, the web chat (standard library only; `/api/chat` returns tool results as card data, `/api/edit` applies quantity buttons), the terminal chat |
+| `foodagent/session.py`, `web.py`, `cli.py` | Session memory with a 2-hour idle TTL, the per-turn runner and log, the web chat (standard library only; `/api/chat/stream` sends cards as NDJSON as soon as a tool returns them and then the reply, `/api/chat` is the same in one JSON response, `/api/edit` applies quantity buttons), the terminal chat |
 | `foodagent/db.py`, `db_schema.sql` | Postgres storage and schema: seeding, catalog loader, orders, chat log |
 | `foodagent/metrics.py` | Session metrics (conversion, turns to order, latency to first recommendation) against the doc's v1 targets |
 | `foodagent/eval.py` | 240 generated requests with labels, an independent auditor, and the release gate |
@@ -158,13 +159,15 @@ Each turn's log row lists the guardrails that fired (`guardrails` in `requests.j
 
 ## Eval (`python -m foodagent.eval`)
 
-Current result on the 40-restaurant database catalog: 240 requests, 617 bundles shown, 0 allergen, diet, budget or deadline violations, 2633/2633 unsafe add-requests refused, 48/48 sampled conversations ordered cleanly, parse accuracy 100%, p95 recommend 1.2 s (19 ms on the 6-restaurant seed). Guardrails: 18/18 adversarial inputs blocked with the right reason, 0 of 262 normal requests and follow-ups wrongly blocked, 7/7 reply checks correct. The run takes about 90 seconds.
+Offline (free, about 90 s), on the 40-restaurant database catalog: 240 requests, 602 bundles shown, 0 allergen, diet, budget or deadline violations, 2746/2746 unsafe add-requests refused, 55/55 sampled conversations ordered cleanly, parse accuracy 100%, 36/36 held-out allergy phrasings (`ALLERGY_PARAPHRASES`, including non-allergy mentions such as "we love fish curry"), p95 recommend 1.0 s. Guardrails: 18/18 adversarial inputs blocked with the right reason, 0 of 262 normal requests and follow-ups wrongly blocked, 7/7 reply checks correct. Results are written to `eval_results.json` (with the commit and every miss).
 
-The release gate needs all of it: zero violations, every unsafe edit refused, parse accuracy ≥ 95%, every sampled order clean, and every guardrail case right. Run it before every push or demo; it exits with code 1 when the gate fails, so it can also run in CI.
+The release gate needs all of it: zero violations, every unsafe edit refused, parse accuracy ≥ 95%, every held-out allergy phrasing exact, every sampled order clean, and every guardrail case right. It exits with code 1 when the gate fails, so it can run in CI. (The pre-fix parser scores 20/36 on the phrasings, so the gate catches that regression.)
+
+`--live N` also runs N requests through the Claude orchestrator in web (cards) mode: two thirds from the generated set with an allergy, one third from the held-out phrasings. For each, it records the constraints Claude built, whether every labelled allergen was kept, an audit of the bundles shown, tool calls, errors, and both latencies (`first_view_ms`, when the cards were ready, and the full reply). Results go to `eval_live_results.json`. The live gate needs 0 errors, 0 violations and 0 dropped allergens; a clarifying question is reported separately. Last run (20 requests, `claude-opus-5`, effort low): all gates clean, cards median 3.0 s / p95 3.9 s, reply median 5.9 s / p95 6.9 s.
 
 ## Metrics (`python -m foodagent.metrics`)
 
-Reads the `chat_session` view and scores the doc's session metrics: chat-to-order conversion (target ≥ 30%), median turns to order (≤ 4) and p95 latency to the first recommendation (≤ 4 s), plus the turn error rate. `--since YYYY-MM-DD` and `--agent Orchestrator|Agent` narrow it. On-time delivery needs delivered timestamps from a real logistics API, so it waits for Phase 3.
+Reads the `chat_session` view and scores the doc's session metrics: chat-to-order conversion (target ≥ 30%), median turns to order (≤ 4) and p95 latency to the first recommendation (≤ 4 s; measured to when the cards reached the page, `chat_requests.first_view_ms`, or the full turn when no card was streamed), plus the turn error rate. `--since YYYY-MM-DD` and `--agent Orchestrator|Agent` narrow it. On-time delivery needs delivered timestamps from a real logistics API, so it waits for Phase 3.
 
 The auditor recomputes totals, arrival times and allergen hits from the raw data. It checks against the labelled constraints, so a parser miss counts as a violation. One caveat: the requests come from templates. Parse accuracy on real, messier phrasing will be lower, so add a labelled set of real requests before relying on that number.
 

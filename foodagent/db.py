@@ -301,10 +301,10 @@ def save_request(row: dict, url: str | None = None) -> None:
     from psycopg.types.json import Jsonb
     with connect(url) as conn:
         conn.execute(
-            "INSERT INTO chat_requests (request_id, ts, session_id, agent, message, reply, state, tools, error, ms) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            "INSERT INTO chat_requests (request_id, ts, session_id, agent, message, reply, state, tools, error, ms, first_view_ms) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
             [row["request_id"], row["ts"], row["session_id"], row["agent"], row["message"], row["reply"],
-             row["state"], Jsonb(json.loads(json.dumps(row["tools"], default=str))), row["error"], row["ms"]])
+             row["state"], Jsonb(json.loads(json.dumps(row["tools"], default=str))), row["error"], row["ms"], row.get("first_view_ms")])
 
 
 def main() -> None:

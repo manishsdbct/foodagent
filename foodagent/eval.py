@@ -1,6 +1,8 @@
 """Offline eval suite (design doc, "Evaluation"): 200+ scripted requests with known answers.
 
-    python -m foodagent.eval            # prints the report; exit code 1 if the release gate fails
+    python -m foodagent.eval            # prints the report, writes eval_results.json; exit code 1 if the gate fails
+    python -m foodagent.eval --live 12  # also runs 12 requests through the Claude orchestrator (needs an API key,
+                                        # costs real tokens); writes eval_live_results.json
 
 Release gate: zero allergen or diet violations in shown bundles, zero budget or deadline breaches,
 constraint-parse accuracy >= 95% of fields exact, and the guardrails: every adversarial input blocked
@@ -12,13 +14,17 @@ customer actually said), so a parser miss that drops an allergy shows up as a vi
 """
 from __future__ import annotations
 
+import argparse
 import itertools
+import json
 import random
 import statistics
+import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from pathlib import Path
 from types import SimpleNamespace
 
 from .agent import Agent
@@ -45,6 +51,33 @@ ALLERGY_PHRASES = [
     ("one of us can't eat cashew", {"tree_nut"}), ("one is gluten intolerant", {"gluten"}),
     ("one has a dairy allergy", {"dairy"}), ("no egg please, egg allergy", {"egg"}),
     ("one has a sesame allergy", {"sesame"}), ("my son has a severe nut allergy", {"peanut", "tree_nut"}),
+    ("one is allergic to fish", {"fish"}), ("my son is allergic to milk", {"dairy"}),
+    ("one guest can't have dairy", {"dairy"}), ("one has a seafood allergy", {"fish", "shellfish"}),
+    ("one is allergic to mustard", {"mustard"}), ("she has celiac disease", {"gluten"}),
+]
+# Held out from the generator: everyday ways to state (or not state) an allergy, checked exactly. A miss here can
+# drop an allergy, so the release gate needs all of them.
+ALLERGY_PARAPHRASES = [
+    ("dinner for 4, one is allergic to fish", {"fish"}), ("dinner for 4, my son is allergic to milk", {"dairy"}),
+    ("lunch for 3, allergic to peanuts", {"peanut"}), ("dinner for 5, one has a nut allergy", {"peanut", "tree_nut"}),
+    ("dinner for 2, I'm allergic to shrimp", {"shellfish"}), ("dinner for 6, two people can't have dairy", {"dairy"}),
+    ("dinner for 4, no fish please", {"fish"}), ("dinner for 4, she's lactose intolerant", {"dairy"}),
+    ("dinner for 3, he is allergic to eggs", {"egg"}), ("dinner for 4, one guest is allergic to sesame", {"sesame"}),
+    ("dinner for 4, gluten-free for one person", {"gluten"}), ("dinner for 4, allergic to mustard", {"mustard"}),
+    ("dinner for 4, one of us is allergic to soy", {"soy"}), ("dinner for 4, fish allergy", {"fish"}),
+    ("dinner for 4, milk allergy", {"dairy"}), ("dinner for 4, my wife has a seafood allergy", {"fish", "shellfish"}),
+    ("dinner for 4, keep it dairy free", {"dairy"}), ("dinner for 4, she reacts badly to cashews", {"tree_nut"}),
+    ("dinner for 4, allergic to almonds and milk", {"tree_nut", "dairy"}),
+    ("dinner for 4, cannot eat anything with egg", {"egg"}), ("dinner for 4, no milk products", {"dairy"}),
+    ("dinner for 4, one person has celiac disease", {"gluten"}), ("dinner for 4, allergic to prawns", {"shellfish"}),
+    ("dinner for 4, sensitive to wheat", {"gluten"}), ("dinner for 4, allergic to fish, milk and eggs", {"fish", "dairy", "egg"}),
+    ("dinner for 4, she can't have peanuts or sesame", {"peanut", "sesame"}), ("dinner for 6, cashew-free", {"tree_nut"}),
+    ("my daughter is allergic to tree nuts, dinner for 3", {"tree_nut"}), ("dinner for 4 but no seafood", {"fish", "shellfish"}),
+    # mentions that are not allergies
+    ("dinner for 4, we love fish curry", set()), ("dinner for 4 with milkshakes", set()),
+    ("dinner for 6, butter chicken please", set()), ("dinner for 4, egg biryani is fine", set()),
+    ("one has a nut allergy, we love fish curry", {"peanut", "tree_nut"}), ("nobody is allergic to fish, dinner for 4", set()),
+    ("no one has allergies, dinner for 4", set()),
 ]
 BUDGETS = [(None, ""), (2000, "keep the total under ₹2,000"), (1500, "budget 1500"), (2500, "within rs 2500"),
            (3000, "under 3k"), (1200, "not more than 1200 rupees"), (800, "under ₹800")]
@@ -240,6 +273,8 @@ def run(cases: list[Case] | None = None) -> dict:
                 orders_ok += 1
     lat = sorted(latencies)
     guard = guardrail_eval(cases)
+    paraphrase_misses = [f"want {sorted(want)} got {sorted(got)} :: {text}" for text, want in ALLERGY_PARAPHRASES
+                         if (got := parse_rules(text, DAY.replace(hour=18, minute=45))["allergens"]) != want]
     report = {
         "requests": len(cases),
         "bundles_shown": shown,
@@ -247,6 +282,7 @@ def run(cases: list[Case] | None = None) -> dict:
         "requests_with_only_near_misses": near_miss_ok,
         "requests_with_nothing": len(cases) - with_bundles - near_miss_ok,
         "parse_accuracy": fields_exact / fields_total,
+        "allergy_paraphrases": f"{len(ALLERGY_PARAPHRASES) - len(paraphrase_misses)}/{len(ALLERGY_PARAPHRASES)}",
         "violations": len(violations),
         "allergen_violations": sum(v.startswith("ALLERGEN") for v in violations),
         "diet_violations": sum(v.startswith("DIET") for v in violations),
@@ -261,27 +297,110 @@ def run(cases: list[Case] | None = None) -> dict:
         "guardrail_replies_checked": f"{guard['caught']}/{guard['replies']}",
     }
     report["gate_pass"] = (report["violations"] == 0 and refused_edits == unsafe_edits
-                           and report["parse_accuracy"] >= 0.95 and orders_ok == orders_tried
+                           and report["parse_accuracy"] >= 0.95 and not paraphrase_misses and orders_ok == orders_tried
                            and guard["blocked"] == guard["adversarial"] and not guard["false_positives"]
                            and guard["caught"] == guard["replies"])
     report["_violations"], report["_parse_misses"] = violations, parse_misses
+    report["_allergy_paraphrase_misses"] = paraphrase_misses
     report["_guardrail_false_positives"] = guard["false_positives"]
     return report
 
 
-def main() -> None:
-    report = run()
+def _commit() -> str | None:
+    try:
+        return subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def _save(path: str, report: dict) -> None:
+    """The run's numbers plus every miss, so a result can be checked later without re-running it."""
+    out = {"run_at": datetime.now().astimezone().isoformat(timespec="seconds"), "commit": _commit(),
+           **{k.lstrip("_"): v for k, v in report.items()}}
+    Path(path).write_text(json.dumps(out, indent=2, ensure_ascii=False, default=str) + "\n")
+
+
+# ---------------------------------------------------------------- live eval (Claude orchestrator)
+def live_eval(n: int = 12, seed: int = 11) -> dict:
+    """Real requests through the Claude orchestrator, as the web chat runs them (cards mode): did the
+    constraints it built keep every labelled allergen, did any bundle it showed break a rule, and how long
+    until the cards and the reply arrived. Costs API tokens: about two model calls per request."""
+    from .orchestrator import MODEL, Orchestrator
+    from .orders import OrderService
+    from .session import run_turn
+    rng = random.Random(seed)
+    pool = generate()
+    picked = [c for c in pool if "allergy" in c.tags]
+    cases = rng.sample(picked, min(n - n // 3, len(picked)))
+    at = DAY.replace(hour=18, minute=45)
+    cases += [Case(text, at, {"headcount": parse_rules(text, at)["headcount"], "allergens": want}, ["paraphrase"])
+              for text, want in rng.sample([p for p in ALLERGY_PARAPHRASES if p[1]], n // 3)]
+    rows = []
+    for case in cases:
+        agent = Orchestrator(case.now, OrderService(), cards=True)
+        reply, row = run_turn(agent, "eval", case.text)
+        c, truth = agent.session.constraints, _truth(case.label)
+        shown = list(agent.session.bundles.values()) if agent.state == "RECOMMENDING" else []
+        rows.append({"text": case.text, "labelled_allergens": sorted(truth.allergens),
+                     "used_allergens": sorted(c.allergens) if c else None,
+                     # judged only when the agent built constraints; a clarifying question is counted separately
+                     "allergen_kept": None if c is None else truth.allergens <= c.allergens,
+                     "state": agent.state, "bundles": len(shown),
+                     "violations": [v for b in shown for v in audit(b, truth, case.now)],
+                     "tools": [t["tool"] for t in row["tools"]], "error": row["error"],
+                     "first_view_ms": row["first_view_ms"], "reply_ms": row["ms"], "reply": reply})
+        print(f"  {row['first_view_ms'] or '-':>7} ms cards  {row['ms']:>7} ms reply  "
+              f"{ {True: 'ok  ', False: 'MISS', None: 'ASK '}[rows[-1]['allergen_kept']]} {case.text[:70]}", flush=True)
+    def p(vals, q):
+        vals = sorted(v for v in vals if v is not None)
+        return round(vals[int(q * (len(vals) - 1))]) if vals else None
+    first = [r["first_view_ms"] for r in rows if r["bundles"]]
+    report = {"model": MODEL, "requests": len(rows),
+              "errors": sum(bool(r["error"]) for r in rows),
+              "asked_instead_of_recommending": sum(r["allergen_kept"] is None for r in rows),
+              "allergens_dropped": sum(r["allergen_kept"] is False for r in rows),
+              "requests_with_bundles": sum(bool(r["bundles"]) for r in rows),
+              "violations": sum(len(r["violations"]) for r in rows),
+              "median_cards_ms": p(first, 0.5), "p95_cards_ms": p(first, 0.95),
+              "median_reply_ms": p([r["reply_ms"] for r in rows], 0.5), "p95_reply_ms": p([r["reply_ms"] for r in rows], 0.95)}
+    report["latency_target_met"] = report["p95_cards_ms"] is not None and report["p95_cards_ms"] <= 4000
+    report["gate_pass"] = report["errors"] == 0 and report["violations"] == 0 and report["allergens_dropped"] == 0
+    report["_rows"] = rows
+    return report
+
+
+def _print(report: dict) -> None:
     for k, v in report.items():
         if not k.startswith("_"):
             print(f"{k:32} {v:.3f}" if isinstance(v, float) else f"{k:32} {v}")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--live", type=int, metavar="N", help="also run N requests through the Claude orchestrator")
+    ap.add_argument("--out", default="eval_results.json")
+    ap.add_argument("--live-out", default="eval_live_results.json")
+    args = ap.parse_args()
+    report = run()
+    _print(report)
     for title, rows in (("Violations", report["_violations"]), ("Parse misses", report["_parse_misses"]),
+                        ("Allergy paraphrase misses", report["_allergy_paraphrase_misses"]),
                         ("Guardrail false positives", report["_guardrail_false_positives"])):
         if rows:
             print(f"\n{title} ({len(rows)}):")
             for r in rows[:15]:
                 print("  " + r)
-    print("\nRELEASE GATE:", "PASS" if report["gate_pass"] else "FAIL")
-    sys.exit(0 if report["gate_pass"] else 1)
+    _save(args.out, report)
+    print("\nRELEASE GATE:", "PASS" if report["gate_pass"] else "FAIL", f"(saved to {args.out})")
+    ok = report["gate_pass"]
+    if args.live:
+        print(f"\nLive eval: {args.live} requests through the Claude orchestrator")
+        live = live_eval(args.live)
+        _print(live)
+        _save(args.live_out, live)
+        print("\nLIVE GATE:", "PASS" if live["gate_pass"] else "FAIL", f"(saved to {args.live_out})")
+        ok = ok and live["gate_pass"]
+    sys.exit(0 if ok else 1)
 
 
 if __name__ == "__main__":

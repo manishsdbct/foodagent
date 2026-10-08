@@ -260,6 +260,8 @@ CREATE TABLE IF NOT EXISTS chat_requests (
   error      TEXT,
   ms         REAL NOT NULL
 );
+-- When the turn's first card reached the page (web, Claude orchestrator); NULL when no card was streamed.
+ALTER TABLE chat_requests ADD COLUMN IF NOT EXISTS first_view_ms REAL;
 CREATE INDEX IF NOT EXISTS chat_requests_session ON chat_requests (session_id, ts);
 
 -- Per-session funnel for the design doc's v1 metrics (conversion, turns to order, latency).
@@ -275,7 +277,8 @@ SELECT session_id,
        count(*)                                                  AS turns,
        count(*) FILTER (WHERE error IS NOT NULL)                 AS errors,
        min(turn) FILTER (WHERE state = 'RECOMMENDING')           AS first_recommendation_turn,
-       (array_agg(ms ORDER BY turn) FILTER (WHERE state = 'RECOMMENDING'))[1] AS first_recommendation_ms,
+       -- time until the options were on screen: the streamed cards when there were any, else the full turn
+       (array_agg(coalesce(first_view_ms, ms) ORDER BY turn) FILTER (WHERE state = 'RECOMMENDING'))[1] AS first_recommendation_ms,
        min(turn) FILTER (WHERE state = 'ORDERED')                AS order_turn
 FROM t
 GROUP BY session_id;
