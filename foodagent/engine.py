@@ -14,7 +14,7 @@ from datetime import datetime
 from . import eta as eta_service
 from .bundler import MAX_HEADCOUNT, counts_as_veg, dp_bundles
 from .models import (CARB_COURSES, EXTRA_COURSES, GST_RATE, MAIN_COURSES, MEAL_COURSES, Bundle,
-                     Constraints, Item, Line, Restaurant)
+                     Constraints, Item, Line, Restaurant, has_dish)
 
 MIN_RATING = 3.8
 STRATEGIES = [1.0, 0.7, 0.4, 0.0]  # greedy fallback: weight on quality vs value; lower = cheaper
@@ -86,6 +86,8 @@ def score_item(item: Item, r: Restaurant, c: Constraints, profile: dict, max_ord
         wishes += 1; hits += 1.0 if c.region in item.famous_in else 0.0
     if c.cuisines:
         wishes += 1; hits += 1.0 if set(c.cuisines) & set(r.cuisines) else 0.0
+    if c.dishes and has_dish(item.name, c.dishes):
+        return 1.0  # the dish they asked for: the bundler should always want it
     pref = 0.5 * affinity + 0.5 * (hits / wishes if wishes else affinity)
     rating = min(1.0, max(0.0, (item.rating - 3.0) / 2.0))
     popularity = math.log1p(item.orders_30d) / math.log1p(max_orders)
@@ -97,6 +99,8 @@ def score_item(item: Item, r: Restaurant, c: Constraints, profile: dict, max_ord
 # ---------------------------------------------------------------- bundle checks
 def violations(b: Bundle, c: Constraints) -> list[str]:
     out = []
+    if c.dishes and not any(has_dish(l.item.name, c.dishes) for l in b.lines):
+        out.append(f"no {' or '.join(c.dishes)} in the bundle")
     for l in b.lines:
         reason = block_reason(l.item, c)
         if reason:
@@ -252,6 +256,7 @@ def explain(b: Bundle, c: Constraints) -> list[str]:
 class Recommendation:
     bundles: list[Bundle] = field(default_factory=list)
     near_misses: list[tuple[str, str, float | None]] = field(default_factory=list)  # (restaurant, problem, total)
+    unmet: str | None = None  # an asked-for cuisine or dish that no bundle could include, in plain words
 
 
 def _build(r: Restaurant, eligible: list[Item], scores: dict[str, float], c: Constraints) -> list[Bundle]:
@@ -275,8 +280,17 @@ def recommend_bundles(c: Constraints, restaurants: list[Restaurant], now: dateti
         return rec
     max_orders = max(i.orders_30d for r in restaurants for i in r.items)
     per_restaurant: list[list[Bundle]] = []
+    asked = bool(c.cuisines or c.dishes)
+    serving = 0  # restaurants that serve what was asked for
     for r in restaurants:
-        if restaurant_block(r, now, c):
+        if c.cuisines and not set(c.cuisines) & set(r.cuisines):
+            continue
+        if c.dishes and not any(has_dish(i.name, c.dishes) for i in r.items):
+            continue
+        serving += 1
+        if (why := restaurant_block(r, now, c)):
+            if asked:  # they asked for this kind of food: say why this place is out
+                rec.near_misses.append((r.name, why, None))
             continue
         ok, arrive, margin = check_deadline(r, now, c)
         if not ok:
@@ -307,22 +321,28 @@ def recommend_bundles(c: Constraints, restaurants: list[Restaurant], now: dateti
             per_restaurant.append(sorted(feasible, key=lambda x: x.score, reverse=True)[:2])  # best 2 per restaurant
         elif best_miss:
             rec.near_misses.append(best_miss)
-    rec.bundles = diversify(per_restaurant, k)
+    rec.bundles = diversify(per_restaurant, k, mix_cuisines=not asked)
+    if asked and not rec.bundles:
+        wish = " or ".join(c.dishes + [cu.replace("_", " ").title() + " food" for cu in c.cuisines])
+        rec.unmet = (f"none of our restaurants serves {wish}" if not serving else
+                     f"{serving} restaurant{'s' if serving > 1 else ''} serve{'' if serving > 1 else 's'} {wish}, "
+                     f"but none can meet the other constraints right now")
     for n, b in enumerate(rec.bundles, 1):
         b.bundle_id = f"b_{n}"
     rec.near_misses.sort(key=lambda m: (m[2] is None, m[2] or 0))
     return rec
 
 
-def diversify(per_restaurant: list[list[Bundle]], k: int) -> list[Bundle]:
-    """Top k with different restaurants and at least two cuisines where possible.
+def diversify(per_restaurant: list[list[Bundle]], k: int, mix_cuisines: bool = True) -> list[Bundle]:
+    """Top k with different restaurants and at least two cuisines where possible (not when the customer
+    asked for a cuisine or dish: then every option must be that).
 
     A restaurant's second-best bundle is only used when there are fewer than k restaurants.
     """
     firsts = sorted((opts[0] for opts in per_restaurant), key=lambda b: b.score, reverse=True)
     picked = firsts[:k]
     cuisines = {cu for b in picked for cu in b.restaurant.cuisines}
-    if len(picked) == k and len(cuisines) < 2:
+    if mix_cuisines and len(picked) == k and len(cuisines) < 2:
         other = next((b for b in firsts[k:] if set(b.restaurant.cuisines) - cuisines), None)
         if other:
             picked[-1] = other

@@ -477,6 +477,8 @@ def _look(c: dict, allergens: list[str]) -> dict:
         parts.append(f"{veg} veg")
     elif veg:
         parts.append("all veg")
+    soft = c.get("soft", {})
+    parts += soft.get("dishes", []) + [cu.replace("_", " ").title() for cu in soft.get("cuisines", [])]
     if allergens:
         parts.append("no " + ", ".join(a.replace("_", " ") for a in allergens))
     if c.get("severe_allergy"):

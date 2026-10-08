@@ -100,6 +100,7 @@ The JSONL files (`orders.jsonl`, `requests.jsonl`, `trace.jsonl`) are still writ
 
 - Shared orders are fully free of every declared allergen. `contains` and `may_contain` both disqualify a dish. Dishes with unverified allergen data are excluded for allergic diners. Severe nut allergies also exclude kitchens flagged for shared fryers or cross-contact.
 - The LLM cannot drop an allergy. Every allergen the rule parser finds in any customer message is merged into what the tools use, and `confirm_cart` re-checks the cart against the merged set.
+- A cuisine or dish the customer names is a requirement, not a preference: only restaurants that serve it are considered, every bundle must contain an asked-for dish, and options are not mixed with other cuisines. If nothing fits, `recommend_bundles` returns no bundles plus `unmet_request`, the reasons per restaurant (`near_misses`) and `other_cuisines_open_now`, and the agent asks instead of offering other food. Cuisine words are normalised (`split_food_wishes` in `models.py`: "pizza" is a dish, "chinese" is `indo_chinese`; an unknown cuisine matches nothing, so it is reported as unavailable).
 - Budget is checked on the payable total: subtotal + 5% GST + delivery + packaging.
 - Deadline: ETA + buffer must be no later than the deadline. The buffer is 20 minutes during 19:00–21:30 and 10 minutes otherwise.
 - Bundles:

@@ -166,6 +166,13 @@ class Tools:
                "bundles": [bundle_json(b, c) for b in rec.bundles],
                "near_misses": [{"restaurant": n, "breaks": why, "total": round(t) if t else None}
                                for n, why, t in rec.near_misses[:2 if rec.bundles else 3]]}
+        if rec.unmet:
+            out["unmet_request"] = rec.unmet
+            out["other_cuisines_open_now"] = sorted({cu for r in self.s.restaurants if not engine.restaurant_block(r, self.s.now, c)
+                                                     for cu in r.cuisines} - set(c.cuisines))
+            out["next_step"] = ("The customer's cuisine or dish request can't be met. Say so plainly with the reason "
+                                "(near_misses), do not offer other food in its place, and ask whether to relax a "
+                                "constraint or choose another cuisine (other_cuisines_open_now).")
         if c.allergens:
             out["allergen_note"] = ALLERGY_NOTE
             if c.allergens >= {"peanut", "tree_nut"}:

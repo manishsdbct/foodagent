@@ -28,8 +28,14 @@ INGREDIENT_ALIASES = {
 CUISINES = {
     r"north[- ]indian|punjabi": "north_indian", r"south[- ]indian|udupi|dosa": "south_indian",
     r"biryani": "biryani", r"chinese|indo[- ]chinese|hakka": "indo_chinese",
-    r"mughlai|tandoori": "mughlai", r"chaat|street food": "street_food",
+    r"mughlai|tandoori": "mughlai", r"chaat|street food": "street_food", r"italian": "italian",
+    r"bengali": "bengali", r"gujarati": "gujarati",
+    # not on the catalog: parsed anyway, so the agent says it is unavailable instead of offering something else
+    r"japanese|sushi|ramen": "japanese", r"\bthai\b": "thai", r"mexican|tacos?\b|burritos?": "mexican",
+    r"korean": "korean", r"continental": "continental",
 }
+DISHES = {r"\bpizzas?\b": "pizza", r"\bpastas?\b": "pasta", r"\bdosas?\b": "dosa", r"\bmomos?\b": "momos",
+          r"\bthalis?\b": "thali", r"\bburgers?\b": "burger", r"\bsandwich(?:es)?\b": "sandwich"}
 REGIONS = ["delhi", "punjab", "hyderabad", "kolkata", "mumbai", "karnataka", "bengaluru", "chennai", "lucknow"]
 TASTES = {r"\bsweet|dessert|meetha|mithai": ("sweet", 3), r"\btangy|chatpata|khatta": ("tangy", 3),
           r"\bsmoky|tandoori|charred": ("smoky", 3), r"\brich|creamy|buttery": ("rich", 3)}
@@ -162,6 +168,7 @@ def parse_rules(text: str, now: datetime) -> dict:
     out["exclude_ingredients"] = sorted(set(exclude))
 
     out["cuisines"] = [c for p, c in CUISINES.items() if re.search(p, t)]
+    out["dishes"] = [d for p, d in DISHES.items() if re.search(p, t)]
     m = re.search(rf"\b(?:famous in|from|popular in)\s+({'|'.join(REGIONS)})\b|\b({'|'.join(REGIONS)})[- ](?:style|famous|special)", t)
     if m:
         out["region"] = m.group(1) or m.group(2)

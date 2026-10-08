@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, time
 from pathlib import Path
@@ -105,6 +106,35 @@ def catalog_from_seed(raw: dict) -> tuple[list[Restaurant], dict]:
     return restaurants, raw.get("user_profile", {})
 
 
+CUISINE_CODES = {"north_indian", "south_indian", "mughlai", "biryani", "indo_chinese", "italian", "bengali", "gujarati",
+                 "street_food"}
+CUISINE_ALIASES = {"chinese": "indo_chinese", "hakka": "indo_chinese", "punjabi": "north_indian", "udupi": "south_indian",
+                   "tandoori": "mughlai", "chaat": "street_food", "hyderabadi": "biryani"}
+DISH_WORDS = {"pizza", "pasta", "biryani", "dosa", "idli", "momos", "noodles", "thali", "kebab", "roll", "burger", "sandwich"}
+
+
+def split_food_wishes(words: list[str]) -> tuple[list[str], list[str]]:
+    """What a customer (or the model) named as cuisines -> (cuisine codes, dish words). "pizza" is a dish;
+    an unknown cuisine ("japanese") is kept, so no restaurant matches and the agent can say so."""
+    cuisines: list[str] = []
+    dishes: list[str] = []
+    for w in words:
+        key = re.sub(r"[\s_-]+", " ", w.strip().lower()).removesuffix(" food").removesuffix(" cuisine")
+        key = key[:-1] if key.endswith("s") and key[:-1] in DISH_WORDS else key
+        code = key.replace(" ", "_")
+        if key in DISH_WORDS:
+            target, value = dishes, key
+        else:
+            target, value = cuisines, (code if code in CUISINE_CODES else CUISINE_ALIASES.get(key, code))
+        if value and value not in target:
+            target.append(value)
+    return cuisines, dishes
+
+
+def has_dish(item_name: str, dishes: list[str]) -> bool:
+    return any(re.search(rf"\b{re.escape(d)}", item_name.lower()) for d in dishes)
+
+
 @dataclass
 class Constraints:
     """Everything the customer asked for. Hard constraints are enforced; soft ones only rank."""
@@ -120,7 +150,8 @@ class Constraints:
     spice_min: int | None = None
     spice_max: int | None = None
     tastes: dict[str, int] = field(default_factory=dict)  # taste -> minimum intensity (0-4)
-    cuisines: list[str] = field(default_factory=list)
+    cuisines: list[str] = field(default_factory=list)   # asked-for cuisines: only these restaurants (any of)
+    dishes: list[str] = field(default_factory=list)     # asked-for dishes ("pizza"): every bundle must have one
     region: str | None = None
     meal: str | None = None
     allow_egg: bool = False          # vegetarians who eat egg ("eggetarian")
@@ -148,7 +179,7 @@ class Constraints:
                 self.allergens |= set(value)
             elif key == "notes":
                 self.notes += [n for n in value if n not in self.notes]
-            elif key in ("include_ingredients", "exclude_ingredients", "cuisines"):
+            elif key in ("include_ingredients", "exclude_ingredients", "cuisines", "dishes"):
                 current = getattr(self, key)
                 current += [v for v in value if v not in current]
             elif key == "tastes":
@@ -176,6 +207,8 @@ class Constraints:
             parts.append(f"spice ≥ {self.spice_min}")
         if self.spice_max is not None:
             parts.append(f"spice ≤ {self.spice_max}")
+        if self.dishes:
+            parts.append(" or ".join(self.dishes))
         if self.include_ingredients:
             parts.append("with " + ", ".join(self.include_ingredients))
         if self.exclude_ingredients:

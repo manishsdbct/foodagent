@@ -259,6 +259,39 @@ def test_unverified_amounts():
     assert unverified_amounts("only Rs 150 more", {1887.0}) == ["Rs 150"]
 
 
+def test_asked_for_dish_is_a_requirement():
+    rec = recommend_bundles(constraints("dosa for 3"), RESTAURANTS, NOW, PROFILE)
+    assert rec.bundles and all(any("Dosa" in l.item.name for l in b.lines) for b in rec.bundles)
+    assert {b.restaurant.name for b in rec.bundles} == {"Udupi Garden"}   # no other cuisine slipped in
+
+
+def test_asked_for_cuisine_is_not_mixed_with_others():
+    rec = recommend_bundles(constraints("chinese dinner for 4"), RESTAURANTS, NOW, PROFILE)
+    assert rec.bundles and all("indo_chinese" in b.restaurant.cuisines for b in rec.bundles)
+
+
+def test_unavailable_food_offers_nothing_in_its_place():
+    rec = recommend_bundles(constraints("pizza for 5"), RESTAURANTS, NOW, PROFILE)
+    assert rec.bundles == [] and rec.unmet == "none of our restaurants serves pizza"
+    s = Session(NOW, RESTAURANTS, PROFILE, OrderService())
+    out = Tools(s).recommend_bundles({"headcount": 5, "soft": {"cuisines": ["pizza"]}})
+    assert out["bundles"] == [] and out["unmet_request"] and "do not offer other food" in out["next_step"]
+    assert "north_indian" in out["other_cuisines_open_now"]
+
+
+def test_closed_restaurants_explain_an_unmet_request():
+    late = NOW.replace(hour=23, minute=55)
+    rec = recommend_bundles(constraints("dosa for 3", late), RESTAURANTS, late, PROFILE)
+    assert not rec.bundles and rec.unmet.startswith("1 restaurant serves dosa")
+    assert rec.near_misses == [("Udupi Garden", "closed now", None)]
+
+
+def test_schema_treats_pizza_as_a_dish_not_a_cuisine():
+    c = OrderConstraints.model_validate({"headcount": 5, "soft": {"cuisines": ["Pizza", "Italian", "chinese"],
+                                                                  "include_ingredients": ["pizza", "paneer"]}}).to_constraints(NOW)
+    assert (c.cuisines, c.dishes, c.include_ingredients) == (["italian", "indo_chinese"], ["pizza"], ["paneer"])
+
+
 @pytest.mark.parametrize("text,want", ALLERGY_PARAPHRASES)
 def test_allergy_paraphrases(text, want):
     """Everyday phrasings ("allergic to fish", "can't have dairy", "no seafood") and mentions that are not

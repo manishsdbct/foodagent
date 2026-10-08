@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from .models import ALLERGENS, Constraints
+from .models import ALLERGENS, DISH_WORDS, Constraints, split_food_wishes
 
 Allergen = Literal[tuple(ALLERGENS)]
 
@@ -42,7 +42,11 @@ class Region(BaseModel):
 
 class Soft(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    cuisines: list[str] = []
+    cuisines: list[str] = Field([], description="Cuisines the customer asked for in this conversation (e.g. italian, "
+                                "north_indian, indo_chinese). A requirement: only these restaurants are used. Leave empty "
+                                "when the customer did not name one; do not fill it from the profile.")
+    dishes: list[str] = Field([], description="Dishes the customer asked for by name (e.g. pizza, biryani, dosa). A "
+                              "requirement: every bundle must contain one.")
     spice: Range | None = None
     taste: dict[str, Range] = {}
     include_ingredients: list[str] = []
@@ -94,11 +98,12 @@ class OrderConstraints(BaseModel):
         c.service_style = self.service_style
         c.address_id = self.address_id
         s = self.soft
-        c.cuisines = list(s.cuisines)
+        dish_like = [i for i in s.include_ingredients if i.lower() in DISH_WORDS]  # "pizza" is not an ingredient
+        c.cuisines, c.dishes = split_food_wishes(s.cuisines + s.dishes + dish_like)
         if s.spice:
             c.spice_min, c.spice_max = s.spice.min, s.spice.max
         c.tastes = {k: v.min for k, v in s.taste.items() if v.min}
-        c.include_ingredients = [i.lower() for i in s.include_ingredients]
+        c.include_ingredients = [i.lower() for i in s.include_ingredients if i.lower() not in DISH_WORDS]
         c.exclude_ingredients = [i.lower() for i in s.exclude_ingredients]
         c.region = s.region.code.lower() if s.region else None
         return c
@@ -124,7 +129,7 @@ class OrderConstraints(BaseModel):
             budget_inr=Budget(max=c.budget_max) if c.budget_max else None,
             deliver_by=c.deliver_by.strftime("%H:%M") if c.deliver_by else None,
             meal=c.meal, service_style=c.service_style, severe_allergy=c.severe, address_id=c.address_id,
-            soft=Soft(cuisines=c.cuisines,
+            soft=Soft(cuisines=c.cuisines, dishes=c.dishes,
                       spice=Range(min=c.spice_min, max=c.spice_max) if c.spice_min or c.spice_max is not None else None,
                       taste={k: Range(min=v) for k, v in c.tastes.items()},
                       include_ingredients=c.include_ingredients, exclude_ingredients=c.exclude_ingredients,

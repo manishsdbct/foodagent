@@ -6,7 +6,7 @@ import re
 import secrets
 from datetime import datetime
 
-from .engine import DishHit, modify_bundle, recommend_bundles, search_dishes, violations, check_deadline
+from .engine import DishHit, check_deadline, modify_bundle, recommend_bundles, restaurant_block, search_dishes, violations
 from .models import Bundle, Constraints, Line, load_data
 from .orders import OrderError, OrderService, PaymentDeclined
 from .parser import parse
@@ -91,6 +91,17 @@ class Agent:
         out = [f"Looking for: {self.c.summary()}"] + self._notes()
         if not rec.bundles:
             self.state = "GATHERING"
+            if rec.unmet:
+                out.append(f"Sorry, {rec.unmet}.")
+                if rec.near_misses:
+                    out.append("Why:")
+                    for name, problem, _ in rec.near_misses[:3]:
+                        out.append(f"  • {name}: {problem}")
+                open_now = sorted({cu.replace("_", " ").title() for r in self.restaurants if not restaurant_block(r, self.now, self.c)
+                                   for cu in r.cuisines})
+                ask = "Would you like to relax one of those, or try another cuisine?" if rec.near_misses else "What would you like instead?"
+                out.append(f"{ask} Open now: {', '.join(open_now)}.")
+                return "\n".join(out)
             out.append("Nothing fits every constraint. Closest options:")
             for name, problem, total in rec.near_misses[:3]:
                 out.append(f"  • {name}: {problem}" + (f" (total {money(total)})" if total else ""))
